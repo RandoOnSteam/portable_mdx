@@ -4,14 +4,11 @@
 #include "x68sound_op.h"
 #include "x68sound_context.internal.h"
 
-#if X68SOUND_ENABLE_PORTABLE_CODE
 Op::Op(X68SoundContextImpl *contextImpl) {
 	m_contextImpl = contextImpl;
-#else
+}
 Op::Op(void) {
-#endif
-};
-
+}
 void Op::Init() {
 	Note = 5*12+8;
 	Kc = 5*16+8 + 1;
@@ -43,9 +40,9 @@ void Op::Init() {
 
 //	NoiseStep = (__int64)(1<<26)*(__int64)62500/Samprate;
 #if X68SOUND_ENABLE_PORTABLE_CODE
-	NoiseStep = (int64_t)(1<<26)*(int64_t)OpmRate/Samprate;
+	NoiseStep = (int)((int64_t)(1<<26)*(int64_t)OpmRate/Samprate);
 #else
-	NoiseStep = (__int64)(1<<26)*(__int64)OpmRate/Samprate;
+	NoiseStep = (int)((__int64)(1<<26)*(__int64)OpmRate/Samprate);
 #endif
 	SetNFRQ(0);
 	NoiseValue = 1;

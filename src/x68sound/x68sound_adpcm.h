@@ -54,11 +54,8 @@ int FinishCounter;
 	int DmaArrayChainSetNextMtcMar();
 	int DmaLinkArrayChainSetNextMtcMar();
 
-#if X68SOUND_ENABLE_PORTABLE_CODE
 	Adpcm(struct tagX68SoundContextImpl *contextImpl);
-#else
 	Adpcm(void);
-#endif
 	~Adpcm() {};
 	void	Init();
 	void	InitSamprate();

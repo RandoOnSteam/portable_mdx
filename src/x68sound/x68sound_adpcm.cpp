@@ -4,12 +4,10 @@
 #include "x68sound_adpcm.h"
 #include "x68sound_context.internal.h"
 
-#if X68SOUND_ENABLE_PORTABLE_CODE
 Adpcm::Adpcm(X68SoundContextImpl *contextImpl) {
 	m_contextImpl = contextImpl;
-#else
+}
 Adpcm::Adpcm(void) {
-#endif
 }
 
 void Adpcm::SetAdpcmRate(int rate) {

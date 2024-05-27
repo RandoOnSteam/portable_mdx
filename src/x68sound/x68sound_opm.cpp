@@ -172,7 +172,7 @@ void Opm::Reset() {
 			pan[0][ch] = pan[1][ch] = 0;
 		}
 	}
-	
+
 	// エンベロープ用カウンタを初期化
 	{
 		EnvCounter1 = 0;
@@ -296,7 +296,7 @@ void Opm::ResetSamprate() {
 			op[ch][3].InitSamprate();
 		}
 	}
-	
+
 	// LFOを初期化
 	lfo.InitSamprate();
 
@@ -313,23 +313,31 @@ void Opm::ResetSamprate() {
 #if X68SOUND_ENABLE_PORTABLE_CODE
 Opm::Opm(X68SoundContextImpl *contextImpl)
 :	/* 要 c++11 */
-	op{
-		{contextImpl, contextImpl, contextImpl, contextImpl},
-		{contextImpl, contextImpl, contextImpl, contextImpl},
-		{contextImpl, contextImpl, contextImpl, contextImpl},
-		{contextImpl, contextImpl, contextImpl, contextImpl},
-		{contextImpl, contextImpl, contextImpl, contextImpl},
-		{contextImpl, contextImpl, contextImpl, contextImpl},
-		{contextImpl, contextImpl, contextImpl, contextImpl},
-		{contextImpl, contextImpl, contextImpl, contextImpl}
-	}
-,	lfo(contextImpl)
+	lfo(contextImpl)
 ,	adpcm(contextImpl)
-,	pcm8{
-		contextImpl, contextImpl, contextImpl, contextImpl,
-		contextImpl, contextImpl, contextImpl, contextImpl
-	}
 {
+	op[0][0] = contextImpl; op[0][1] = contextImpl;
+	op[0][2] = contextImpl; op[0][3] = contextImpl;
+	op[1][0] = contextImpl; op[1][1] = contextImpl;
+	op[1][2] = contextImpl; op[1][3] = contextImpl;
+	op[2][0] = contextImpl; op[2][1] = contextImpl;
+	op[2][2] = contextImpl; op[2][3] = contextImpl;
+	op[3][0] = contextImpl; op[3][1] = contextImpl;
+	op[3][2] = contextImpl; op[3][3] = contextImpl;
+	op[4][0] = contextImpl; op[4][1] = contextImpl;
+	op[4][2] = contextImpl; op[4][3] = contextImpl;
+	op[5][0] = contextImpl; op[5][1] = contextImpl;
+	op[5][2] = contextImpl; op[5][3] = contextImpl;
+	op[6][0] = contextImpl; op[6][1] = contextImpl;
+	op[6][2] = contextImpl; op[6][3] = contextImpl;
+	op[7][0] = contextImpl; op[7][1] = contextImpl;
+	op[7][2] = contextImpl; op[7][3] = contextImpl;
+
+	pcm8[0] = contextImpl; pcm8[1] = contextImpl;
+	pcm8[2] = contextImpl; pcm8[3] = contextImpl;
+	pcm8[4] = contextImpl; pcm8[5] = contextImpl;
+	pcm8[6] = contextImpl; pcm8[7] = contextImpl;
+
 	m_contextImpl = contextImpl;
 #else
 Opm::Opm(void) {
@@ -438,7 +446,7 @@ void Opm::MakeTable() {
 			SLOTTBL[slot+24] = slot*4+3;
 		}
 	}
-	
+
 	// Pitch→Δt変換テーブルを作成
 	{
 		int	oct,notekf,step;
@@ -451,9 +459,9 @@ void Opm::MakeTable() {
 					step = STEPTBL_O2[notekf] >> (3-oct);
 				}
 #if X68SOUND_ENABLE_PORTABLE_CODE
-				STEPTBL[oct*12*64+notekf] = step * 64 * (int64_t)(OpmRate)/Samprate;
+				STEPTBL[oct*12*64+notekf] = (int)(step * 64 * (int64_t)(OpmRate)/Samprate);
 #else
-				STEPTBL[oct*12*64+notekf] = step * 64 * (__int64)(OpmRate)/Samprate;
+				STEPTBL[oct*12*64+notekf] = (int)(step * 64 * (__int64)(OpmRate)/Samprate);
 #endif
 			}
 		}
@@ -467,9 +475,9 @@ void Opm::MakeTable() {
 		int i;
 		for (i=0; i<=128+4-1; ++i) {
 #if X68SOUND_ENABLE_PORTABLE_CODE
-			DT1TBL[i] = DT1TBL_org[i] * 64 * (int64_t)(OpmRate)/Samprate;
+			DT1TBL[i] = (int)(DT1TBL_org[i] * 64 * (int64_t)(OpmRate)/Samprate);
 #else
-			DT1TBL[i] = DT1TBL_org[i] * 64 * (__int64)(OpmRate)/Samprate;
+			DT1TBL[i] = (int)(DT1TBL_org[i] * 64 * (__int64)(OpmRate)/Samprate);
 #endif
 		}
 
@@ -592,7 +600,7 @@ void Opm::ExecuteCmnd() {
 			}
 		}
 		break;
-	
+
 	case 0x08:
 	// KON
 		{
@@ -743,7 +751,7 @@ void Opm::ExecuteCmnd() {
 			op[0][SLOTTBL[slot]].SetD1LRR(data);
 		}
 		break;
-	
+
 	}
 
 	}
@@ -761,7 +769,7 @@ void Opm::pcmset62(int ndata) {
 	for (i=0; i<ndata; ++i) {
 		int	Out[2];
 		Out[0] = Out[1] = 0;
-		
+
 		OpmLPFidx += Samprate;
 		while (OpmLPFidx >= WaveOutSamp) {
 			OpmLPFidx -= WaveOutSamp;
@@ -804,7 +812,7 @@ void Opm::pcmset62(int ndata) {
 						int	ch;
 						for (ch=0; ch<8; ++ch) {
 							op[ch][1].inp=op[ch][2].inp=op[ch][3].inp=OpOut[ch]=0;
-	
+
 							lfopitch[ch] = lfo.GetPmValue(ch);
 							lfolevel[ch] = lfo.GetAmValue(ch);
 						}
@@ -853,7 +861,7 @@ void Opm::pcmset62(int ndata) {
 
 					InpInpOpm[0] = OpmHpfOut[0] >> (4+5);
 					InpInpOpm[1] = OpmHpfOut[1] >> (4+5);
-					
+
 //					InpInpOpm[0] = (InpInpOpm[0]&(int)0xFFFFFC00)
 //									>> ((SIZESINTBL_BITS+PRECISION_BITS)-10-5); // 8*-2^17 ～ 8*+2^17
 //					InpInpOpm[1] = (InpInpOpm[1]&(int)0xFFFFFC00)
@@ -912,7 +920,7 @@ void Opm::pcmset62(int ndata) {
 
 //				OutInpAdpcm[0] >>= 4;
 //				OutInpAdpcm[1] >>= 4;
-					
+
 				// 音割れ防止
 #if X68SOUND_ENABLE_PORTABLE_CODE
 				#undef LIMITS
@@ -966,7 +974,7 @@ void Opm::pcmset62(int ndata) {
 				OutInpOpm[0] += (OutOutAdpcm[0]*506) >> (4+9);	// -2048*16～+2048*16
 				OutInpOpm[1] += (OutOutAdpcm[1]*506) >> (4+9);	// OPMとADPCMの音量バランス調整
 			}	// UseAdpcmFlag
-			
+
 
 
 			// 音割れ防止
@@ -1058,7 +1066,7 @@ void Opm::pcmset22(int ndata) {
 	for (i=0; i<ndata; ++i) {
 		int	Out[2];
 		Out[0] = Out[1] = 0;
-		
+
 		if (UseOpmFlag) {
 #if X68SOUND_ENABLE_PORTABLE_CODE
 			RateForPcmset22-=OpmRate;
@@ -1097,7 +1105,7 @@ void Opm::pcmset22(int ndata) {
 						int	ch;
 						for (ch=0; ch<8; ++ch) {
 							op[ch][1].inp=op[ch][2].inp=op[ch][3].inp=OpOut[ch]=0;
-	
+
 							lfopitch[ch] = lfo.GetPmValue(ch);
 							lfolevel[ch] = lfo.GetAmValue(ch);
 						}
@@ -1134,7 +1142,7 @@ void Opm::pcmset22(int ndata) {
 								+ (OpOut[5] & pan[1][5])
 								+ (OpOut[6] & pan[1][6])
 								+ (OpOut[7] & pan[1][7]);
-					
+
 				{
 
 					InpInpOpm[0] = (InpInpOpm[0]&(int)0xFFFFFC00)
@@ -1397,8 +1405,8 @@ int Opm::Start(int samprate, int opmflag, int adpcmflag,
 	}
 	Dousa_mode = 1;
 
-	if (rev < 0.1) rev = 0.1;	
-	
+	if (rev < 0.1) rev = 0.1;
+
 	UseOpmFlag = opmflag;
 	UseAdpcmFlag = adpcmflag;
 	_betw = betw;
@@ -1409,7 +1417,7 @@ int Opm::Start(int samprate, int opmflag, int adpcmflag,
 #else
 	_rev = rev;
 #endif
-	
+
 	if (samprate == 44100) {
 		Samprate = 62500;
 		WaveOutSamp = 44100;
@@ -1478,7 +1486,7 @@ int Opm::SetSamprate(int samprate) {
 	int dousa_mode_bak = Dousa_mode;
 
 	Free();
-	
+
 	if (samprate == 44100) {
 		Samprate = 62500;
 		WaveOutSamp = 44100;
@@ -1513,9 +1521,9 @@ int Opm::SetOpmClock(int clock) {
 	int dousa_mode_bak = Dousa_mode;
 
 	Free();
-	
+
 	OpmRate = rate;
-	
+
 	MakeTable();
 	ResetSamprate();
 
@@ -1524,7 +1532,7 @@ int Opm::SetOpmClock(int clock) {
 }
 
 int Opm::WaveAndTimerStart() {
-	
+
 	Betw_Time = _betw;
 	TimerResolution = _betw;
 	Late_Time = _late+_betw;
@@ -1554,17 +1562,17 @@ int Opm::WaveAndTimerStart() {
 //	Slower_Limit = WaveOutSamp*100/1000;
 //	Slower_Limit = Late_Samples;
 	if (Slower_Limit > Late_Samples) Slower_Limit = Late_Samples;
-	
+
 	if (Dousa_mode != 1) {
 		return 0;
 	}
-	
 
-	
+
+
 	PcmBufSize = Blk_Samples * N_waveblk;
 	nSamples = (unsigned int)(Betw_Samples_Faster);
 
-	
+
 #if !X68SOUND_ENABLE_PORTABLE_CODE
 	thread_handle = CreateThread(NULL, 0, waveOutThread, NULL, 0, &thread_id);
 	if (thread_handle == NULL) {
@@ -1582,7 +1590,7 @@ int Opm::WaveAndTimerStart() {
 
 	MMRESULT	ret;
 
-	
+
 	wfx.wFormatTag = WAVE_FORMAT_PCM;
 	wfx.nChannels = 2;
 	wfx.nSamplesPerSec = WaveOutSamp;
@@ -1760,7 +1768,7 @@ void Opm::AdpcmPoke(unsigned char data) {
 	}
 	return;
 #endif
-	
+
 	// オリジナル
 	if (data & 0x02) {	// ADPCM再生開始
 		adpcm.AdpcmReg &= 0x7F;
@@ -1923,7 +1931,7 @@ void Opm::DmaPoke(unsigned char adrs, unsigned char data) {
 #endif
 				break;
 			}
-			
+
 		}
 		if (data&0x40) {	// CNT == 1 ?
 #if X68SOUND_ENABLE_PORTABLE_CODE
@@ -1991,7 +1999,7 @@ void Opm::DmaPoke(unsigned char adrs, unsigned char data) {
 					}
 				}
 			}
-			
+
 #if X68SOUND_ENABLE_PORTABLE_CODE
 			if ( adpcm.DmaReg.asUint16[0x0A/2] == 0 ) {	// MTC == 0 ?
 #else
@@ -2001,7 +2009,7 @@ void Opm::DmaPoke(unsigned char adrs, unsigned char data) {
 				data &= 0x28;
 				break;
 			}
-			
+
 		}
 		break;
 	}

@@ -9,7 +9,18 @@
 #if MXDRV_ENABLE_PORTABLE_CODE
 	#ifdef _WIN32
 		#include <windows.h>
-		#include <stdint.h>
+		#if defined(_MSC_VER) && _MSC_VER <= 1400 /* 2005 <= */
+			#define nullptr NULL
+			#define override
+			#define alignas(x) /* not supported */
+			#ifndef __cplusplus
+				#define bool int
+				#define true 1
+				#define false 0
+			#endif
+		#else
+			#include <stdint.h>
+		#endif
 	#else
 		#include <stdlib.h>
 		#define BOOL bool
@@ -19,6 +30,7 @@
 		typedef uint32_t DWORD;
 		typedef int64_t LONGLONG;
 	#endif
+	#include <assert.h>
 #endif
 
 #ifdef _WIN32

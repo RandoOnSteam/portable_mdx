@@ -42,6 +42,7 @@ static bool X68SoundContextImpl_Initialize(
 
 	impl->m_RandSeed = 1;
 
+#undef new
 	new(&impl->m_opm) Opm(impl);
 
 	return true;

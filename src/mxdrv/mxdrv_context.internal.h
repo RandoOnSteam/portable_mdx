@@ -4,12 +4,28 @@
 #ifndef __MXDRV_CONTEXT_INTERNAL_H__
 #define __MXDRV_CONTEXT_INTERNAL_H__
 
-#include <mutex>
 #include <mxdrv.h>
 #include <mxdrv_context.h>
 #include <x68sound_context.h>
 #include "mxdrv_config.h"
 #include "mxdrv_depend.h"
+
+#if defined(_WIN32)
+	#include <windows.h>
+	class MutexWrapper
+	{
+	public:
+		MutexWrapper() { mH = CreateMutex(NULL, FALSE, NULL); }
+		~MutexWrapper() { CloseHandle(mH); }
+		void lock() { WaitForSingleObject(mH, INFINITE); }
+		void unlock() { ReleaseMutex(mH); }
+		void* mH;
+	};
+#else
+	#include <mutex>
+	typedef std::mutex MutexWrapper;
+#endif
+
 
 typedef struct tagMxdrvContextImpl {
 	ULONG m_D0;
@@ -81,7 +97,7 @@ typedef struct tagMxdrvContextImpl {
 	bool m_logicalSumOfKeyOnFlagsForPcm[8];
 
 	/* 再入防止用 */
-	std::mutex m_mtx;	/* 配置 new delete が必要 */
+	MutexWrapper m_mtx;	/* 配置 new delete が必要 */
 
 	/*
 		メモリプール領域は、MxdrvContextImpl 構造体から相対アドレス 32bit の

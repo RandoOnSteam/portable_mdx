@@ -2,7 +2,6 @@
 #define __X68SOUND_OPM_H__
 
 #include "x68sound_config.h"
-#include <mutex>
 
 #if X68SOUND_ENABLE_PORTABLE_CODE
 	#include "x68sound_global.h"
@@ -12,6 +11,21 @@
 	#include "x68sound_pcm8.h"
 #endif
 
+#if defined(_WIN32)
+	#include <windows.h>
+	class MutexWrapper
+	{
+	public:
+		MutexWrapper() { mH = CreateMutex(NULL, FALSE, NULL); }
+		~MutexWrapper() { CloseHandle(mH); }
+		void lock() { WaitForSingleObject(mH, INFINITE); }
+		void unlock() { ReleaseMutex(mH); }
+		void* mH;
+	};
+#else
+	#include <mutex>
+	typedef std::mutex MutexWrapper;
+#endif
 
 #define	CMNDBUFSIZE	65535
 #define	FlagBufSize	7
@@ -57,7 +71,7 @@ private:
 	int RateForPcmset22;
 	int Rate2ForPcmset22;
 #endif
-	
+
 	//	short	PcmBuf[PCMBUFSIZE][2];
 	short	(*PcmBuf)[2];
 public:
@@ -71,7 +85,7 @@ private:
 //	int	LfoOverTime;	// LFO tのオーバーフロー値
 //	int	LfoTime;	// LFO専用 t
 //	int LfoRndTime;	// LFOランダム波専用t
-//	int 
+//	int
 //	int	Lfrq;		// LFO周波数設定値 LFRQ
 //	int	LfoWaveForm;	// LFO wave form
 //	inline void	CulcLfoStep();
@@ -115,7 +129,7 @@ private:
 		OutOutAdpcm[2],OutOutAdpcm_prev[2],OutOutAdpcm_prev2[2];	// 高音フィルター２用バッファ
 	int OutInpOutAdpcm[2],OutInpOutAdpcm_prev[2],OutInpOutAdpcm_prev2[2],
 		OutOutInpAdpcm[2],OutOutInpAdpcm_prev[2];			// 高音フィルター３用バッファ
-	
+
 	volatile unsigned char	PpiReg;
 	unsigned char	AdpcmBaseClock;	// ADPCMクロック切り替え(0:8MHz 1:4Mhz)
 	void SetAdpcmRate();
@@ -142,7 +156,7 @@ private:
 	int Dousa_mode;		// 0:非動作 1:X68Sound_Start中  2:X68Sound_PcmStart中
 
 	/* CmndBufアクセスロック用 */
-	std::mutex m_mtxCmnd;
+	MutexWrapper m_mtxCmnd;
 
 //public:
 	Adpcm	adpcm;
@@ -155,9 +169,8 @@ private:
 public:
 #if X68SOUND_ENABLE_PORTABLE_CODE
 	Opm(struct tagX68SoundContextImpl *contextImpl);
-#else
-	Opm(void);
 #endif
+	Opm(void);
 	~Opm();
 	void pcmset62(int ndata);
 	void pcmset22(int ndata);

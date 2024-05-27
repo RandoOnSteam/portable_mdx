@@ -69,7 +69,7 @@ static bool MxdrvContextImpl_Initialize(
 	impl->m_pdxReservedMemoryPoolSize = 0;
 	impl->m_memoryPoolSizeInBytes = allocSizeInBytes - sizeof(MxdrvContextImpl);
 	impl->m_memoryPoolReserved = NULL;
-	new(&impl->m_mtx) std::mutex();
+	placement_new(&impl->m_mtx, MutexWrapper());
 
 	if (X68SoundContext_Initialize(&impl->m_x68SoundContext, impl) == false) return false;
 
@@ -80,7 +80,7 @@ static bool MxdrvContextImpl_Terminate(
 	MxdrvContextImpl *impl
 ){
 	if (X68SoundContext_Terminate(&impl->m_x68SoundContext) == false) return false;
-	impl->m_mtx.~mutex();
+	impl->m_mtx.~MutexWrapper();
 
 	return true;
 }

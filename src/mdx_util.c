@@ -1,10 +1,22 @@
 ﻿/* Copyright (C) 2018 Yosshin(@yosshin4004) */
 
-#include <string.h>		/* for memcpy */
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdio.h>
+#if defined(_MSC_VER) && _MSC_VER <= 1400 /* 2005 <= */
+	#define nullptr NULL
+	#define override
+	#define alignas(x) /* not supported */
+	#ifndef __cplusplus
+		#define bool int
+		#define true 1
+		#define false 0
+	#endif
+#else
+	#include <string.h>		/* for memcpy */
+	#include <stdint.h>
+	#include <stdbool.h>
+	#include <stdio.h>
+#endif
 #include <mdx_util.h>
+#include <assert.h>
 
 /* MDX ファイルイメージのシーク */
 bool MdxSeekFileImage(
@@ -13,12 +25,15 @@ bool MdxSeekFileImage(
 	MDX_CHUNK_TYPE chunkType,
 	/* out */ uint32_t *ofs
 ){
+	const uint8_t *src;
+	uint32_t ofsSrc;
+	uint8_t c;
 	if (mdxFileImage == NULL) return false;				/* 不正な引数 */
 	if (mdxFileImageSizeInBytes == 0) return false;		/* 不正な引数 */
 	if (ofs == 0) return false;							/* 不正な引数 */
 
-	const uint8_t *src = (const uint8_t *)mdxFileImage;
-	uint32_t ofsSrc = 0;
+	src = (const uint8_t *)mdxFileImage;
+	ofsSrc = 0;
 
 	/* タイトル文字列までシーク？ */
 	if (chunkType == MDX_CHUNK_TYPE_TITLE) {
@@ -27,7 +42,6 @@ bool MdxSeekFileImage(
 	}
 
 	/* CR か LF が見つかるまでタイトル文字列をスキップ */
-	uint8_t c;
 	for (;;) {
 		if (ofsSrc >= mdxFileImageSizeInBytes) return false;	/* 不正なデータ */
 		c = src[ofsSrc++];
@@ -88,13 +102,17 @@ bool MdxGetTitle(
 	/* out */ char *titleBuffer,
 	size_t titleBufferSizeInBytes
 ){
+	const uint8_t *src;
+	uint32_t ofsSrc;
+	uint8_t *dst;
+	uint8_t *dstEnd;
 	if (mdxFileImage == NULL) return false;				/* 不正な引数 */
 	if (mdxFileImageSizeInBytes == 0) return false;		/* 不正な引数 */
 	if (titleBuffer == NULL) return false;				/* 不正な引数 */
 	if (titleBufferSizeInBytes == 0) return false;		/* 不正な引数 */
 
-	const uint8_t *src = (const uint8_t *)mdxFileImage;
-	uint32_t ofsSrc = 0;
+	src = (const uint8_t *)mdxFileImage;
+	ofsSrc = 0;
 
 	/* タイトル文字列までシーク */
 	if (
@@ -107,9 +125,10 @@ bool MdxGetTitle(
 	) return false;		/* 不正なデータ */
 
 	/* CR か LF が見つかるまでタイトル文字列をコピー */
-	uint8_t *dst = (uint8_t *)titleBuffer;
-	uint8_t *dstEnd = (uint8_t *)titleBuffer + titleBufferSizeInBytes;
+	dst = (uint8_t *)titleBuffer;
+	dstEnd = (uint8_t *)titleBuffer + titleBufferSizeInBytes;
 	for (;;) {
+		uint8_t c;
 		if (dst == dstEnd - 1) {
 			*dst++ = '\0';
 			return false;		/* バッファ容量不足 */
@@ -118,7 +137,7 @@ bool MdxGetTitle(
 			*dst++ = '\0';
 			return false;		/* 不正なデータ */
 		}
-		uint8_t c = src[ofsSrc++];
+		c = src[ofsSrc++];
 		if (c == 0x0d /* CR */ || c == 0x0a /* LF */) {
 			*dst++ = '\0';
 			break;
@@ -139,12 +158,14 @@ bool MdxHasPdxFileName(
 	uint32_t mdxFileImageSizeInBytes,
 	/* out */ bool *hasPdxFileName
 ){
+	const uint8_t *src;
+	uint32_t ofsSrc;
 	if (mdxFileImage == NULL) return false;				/* 不正な引数 */
 	if (mdxFileImageSizeInBytes == 0) return false;		/* 不正な引数 */
 	if (hasPdxFileName == NULL) return false;			/* 不正な引数 */
 
-	const uint8_t *src = (const uint8_t *)mdxFileImage;
-	uint32_t ofsSrc = 0;
+	src = (const uint8_t *)mdxFileImage;
+	ofsSrc = 0;
 
 	/* PDX ファイル名文字列までシーク */
 	if (
@@ -173,13 +194,20 @@ bool MdxGetPdxFileName(
 	/* out */ char *pdxFileNameBuffer,
 	size_t pdxFileNameBufferSizeInBytes
 ){
+	const uint8_t *src;
+	uint32_t ofsSrc;
+	uint8_t *dstBegin;
+	uint8_t *dst;
+	uint8_t *dstEnd;
+	size_t length;
+	bool hasExt;
 	if (mdxFileImage == NULL) return false;					/* 不正な引数 */
 	if (mdxFileImageSizeInBytes == 0) return false;			/* 不正な引数 */
 	if (pdxFileNameBuffer == NULL) return false;			/* 不正な引数 */
 	if (pdxFileNameBufferSizeInBytes == 0) return false;	/* 不正な引数 */
 
-	const uint8_t *src = (const uint8_t *)mdxFileImage;
-	uint32_t ofsSrc = 0;
+	src = (const uint8_t *)mdxFileImage;
+	ofsSrc = 0;
 
 	/* PDX ファイル名文字列までシーク */
 	if (
@@ -198,10 +226,11 @@ bool MdxGetPdxFileName(
 	}
 
 	/* \0 が見つかるまで PDX ファイル名文字列をコピー */
-	uint8_t *dstBegin = (uint8_t *)pdxFileNameBuffer;
-	uint8_t *dst = dstBegin;
-	uint8_t *dstEnd = (uint8_t *)pdxFileNameBuffer + pdxFileNameBufferSizeInBytes;
+	dstBegin = (uint8_t *)pdxFileNameBuffer;
+	dst = dstBegin;
+	dstEnd = (uint8_t *)pdxFileNameBuffer + pdxFileNameBufferSizeInBytes;
 	for (;;) {
+		uint8_t c;
 		if (dst == dstEnd - 1) {
 			*dst++ = '\0';
 			return false;		/* バッファ容量不足 */
@@ -210,7 +239,7 @@ bool MdxGetPdxFileName(
 			*dst++ = '\0';
 			return false;		/* 不正なデータ */
 		}
-		uint8_t c = src[ofsSrc++];
+		c = src[ofsSrc++];
 		if (c == '\0') {
 			*dst++ = '\0';
 			break;
@@ -219,8 +248,8 @@ bool MdxGetPdxFileName(
 	}
 
 	/* 拡張子が省略されている場合は修正 */
-	size_t length = dst - dstBegin;
-	bool hasExt = false;
+	length = dst - dstBegin;
+	hasExt = false;
 	if (length >= 5){
 		if (
 			(
@@ -238,11 +267,12 @@ bool MdxGetPdxFileName(
 		const char *ext = ".PDX";
 		dst--;
 		for (;;) {
+			char c;
 			if (dst == dstEnd - 1) {
 				*dst++ = '\0';
 				return false;		/* バッファ容量不足 */
 			}
-			char c = *ext++;
+			c = *ext++;
 			if (c == '\0') {
 				*dst++ = '\0';
 				break;
@@ -262,11 +292,14 @@ bool MdxGetRequiredBufferSize(
 	/* out */ uint32_t *requiredMdxBufferSizeInBytes,	/* 省略する場合は NULL */
 	/* out */ uint32_t *requiredPdxBufferSizeInBytes	/* 省略する場合は NULL */
 ){
+	const uint8_t *src;
+	uint32_t ofsSrc;
+	bool hasPdx;
 	if (mdxFileImage == NULL) return false;				/* 不正な引数 */
 	if (mdxFileImageSizeInBytes == 0) return false;		/* 不正な引数 */
 
-	const uint8_t *src = (const uint8_t *)mdxFileImage;
-	uint32_t ofsSrc = 0;
+	src = (const uint8_t *)mdxFileImage;
+	ofsSrc = 0;
 
 	/* MDX バッファのサイズを決定 */
 	if (requiredMdxBufferSizeInBytes != NULL) {
@@ -274,7 +307,6 @@ bool MdxGetRequiredBufferSize(
 	}
 
 	/* PDX を持つか？ */
-	bool hasPdx;
 	if (
 		MdxHasPdxFileName(
 			mdxFileImage,
@@ -283,6 +315,8 @@ bool MdxGetRequiredBufferSize(
 		) == false
 	) return false;			/* 不正なデータ */
 	if (hasPdx) {
+		uint32_t pdxFileNameSizeInBytes;
+		uint32_t pdxBodyOffset;
 		/* PDX ファイル名文字列までシーク */
 		if (
 			MdxSeekFileImage(
@@ -294,17 +328,18 @@ bool MdxGetRequiredBufferSize(
 		) return false;		/* 不正なデータ */
 
 		/* \0 が見つかるまで PDX ファイル名文字列をスキップ */
-		uint32_t pdxFileNameSizeInBytes = 0;
+		pdxFileNameSizeInBytes = 0;
 		for (;;) {
+			uint8_t c;
 			if (ofsSrc >= mdxFileImageSizeInBytes) return false;		/* 不正なデータ */
-			uint8_t c = src[ofsSrc++];
+			c = src[ofsSrc++];
 			if (c == '\0') break;
 			pdxFileNameSizeInBytes++;
 		}
 		pdxFileNameSizeInBytes++ ;	/* 末端 \0 分 */
 
 		/* PDX BODY のオフセットを決定（2byte アライン）*/
-		uint32_t pdxBodyOffset = 8 + pdxFileNameSizeInBytes;
+		pdxBodyOffset = 8 + pdxFileNameSizeInBytes;
 		pdxBodyOffset += pdxBodyOffset & 1;
 
 		/* PDX バッファのサイズを決定 */
@@ -339,6 +374,8 @@ bool MdxUtilCreateMdxPdxBuffer(
 
 	/* MDX バッファの作成 */
 	{
+		uint32_t mdxBodyOffset;
+		bool hasPdx;
 		/* MDX BODY までシーク */
 		if (
 			MdxSeekFileImage(
@@ -348,7 +385,7 @@ bool MdxUtilCreateMdxPdxBuffer(
 				&ofsSrc
 			) == false
 		) return false;		/* 不正なデータ */
-		uint32_t mdxBodyOffset = 8 + ofsSrc;
+		mdxBodyOffset = 8 + ofsSrc;
 
 		/* ヘッダ（8 バイト）以降に MDX ファイルイメージをコピー */
 		if (mdxFileImageSizeInBytes + 8 > mdxBufferSizeInBytes) return false;	/* バッファサイズ不足 */
@@ -359,7 +396,6 @@ bool MdxUtilCreateMdxPdxBuffer(
 		);
 
 		/* PDX を持つか？ */
-		bool hasPdx;
 		if (
 			MdxHasPdxFileName(
 				mdxFileImage,
@@ -386,6 +422,10 @@ bool MdxUtilCreateMdxPdxBuffer(
 	&&	pdxBuffer != NULL
 	&&	pdxBufferSizeInBytes != 0
 	) {
+		uint8_t *dst;
+		uint32_t ofsDst;
+		uint32_t pdxBodyOffset;
+		uint32_t pdxNameLength;
 		/* PDX ファイル名文字列までシーク */
 		if (
 			MdxSeekFileImage(
@@ -397,28 +437,29 @@ bool MdxUtilCreateMdxPdxBuffer(
 		) return false;		/* 不正なデータ */
 
 		/* ヘッダ（8 バイト）以降に PDX ファイル名をコピー */
-		uint8_t *dst = uint8PdxBuffer;
-		uint32_t ofsDst = 8;
+		dst = uint8PdxBuffer;
+		ofsDst = 8;
 		while (ofsDst < pdxBufferSizeInBytes) {
+			uint8_t c;
 			if (ofsSrc >= mdxFileImageSizeInBytes) {
 				dst[ofsDst++] = '\0';
 				return false;		/* 不正なデータ */
 			}
-			uint8_t c = src[ofsSrc++];
+			c = src[ofsSrc++];
 			if (c == '\0') {
 				dst[ofsDst++] = '\0';
 				break;
 			}
 			dst[ofsDst++] = c;
 		}
-		uint32_t pdxNameLength = ofsDst - 8;
+		pdxNameLength = ofsDst - 8;
 
 		/* 2byte アライン */
 		if (ofsDst & 1) {
 			if (ofsDst >= pdxBufferSizeInBytes) return false;		/* バッファサイズ不足 */
 			dst[ofsDst++] = '\0';
 		}
-		uint32_t pdxBodyOffset = ofsDst;
+		pdxBodyOffset = ofsDst;
 
 		/* PDX ファイル名文字列以降に PDX ファイルイメージをコピー */
 		if (ofsDst + pdxFileImageSizeInBytes > pdxBufferSizeInBytes) return false;	/* バッファサイズ不足 */

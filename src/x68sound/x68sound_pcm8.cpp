@@ -7,9 +7,11 @@
 #if X68SOUND_ENABLE_PORTABLE_CODE
 Pcm8::Pcm8(X68SoundContextImpl *contextImpl) {
 	m_contextImpl = contextImpl;
-#else
-Pcm8::Pcm8(void) {
+	Mode = 0x00080403;
+	SetMode(Mode);
+}
 #endif
+Pcm8::Pcm8(void) {
 	Mode = 0x00080403;
 	SetMode(Mode);
 }

@@ -102,11 +102,8 @@ private:
 	void CulcNoiseCycle();
 
 public:
-#if X68SOUND_ENABLE_PORTABLE_CODE
 	Op(struct tagX68SoundContextImpl *contextImpl);
-#else
 	Op(void);
-#endif
 	~Op() {};
 	void Init();
 	void InitSamprate();

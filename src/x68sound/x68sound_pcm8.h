@@ -43,9 +43,8 @@ public:
 
 #if X68SOUND_ENABLE_PORTABLE_CODE
 	Pcm8(struct tagX68SoundContextImpl *contextImpl);
-#else
-	Pcm8(void);
 #endif
+	Pcm8(void);
 	~Pcm8() {};
 	void	Init();
 	void	InitSamprate();

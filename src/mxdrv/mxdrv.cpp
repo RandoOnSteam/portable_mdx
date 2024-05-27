@@ -1,4 +1,4 @@
-﻿// X68k MXDRV music driver version 2.06+17 Rel.X5-S 
+﻿// X68k MXDRV music driver version 2.06+17 Rel.X5-S
 // (c)1988-92 milk.,K.MAEKAWA, Missy.M, Yatsube
 //
 // Converted for Win32 [MXDRVg] V1.50a
@@ -18,7 +18,7 @@
 // ;  Bss  size    0006a2 byte(s)
 // ;  438 Labels
 // ;  Code Generate date Wed May 06 12:59:13 1998
-// ;  Command Line D:\FTOOL\dis.x -C2 --overwrite -7 -m 68040 -M -s8192 -e -g mxdrv17.x mxdrv17.dis 
+// ;  Command Line D:\FTOOL\dis.x -C2 --overwrite -7 -m 68040 -M -s8192 -e -g mxdrv17.x mxdrv17.dis
 // ;          DIS version 2.75
 // ;=============================================
 
@@ -31,7 +31,6 @@
 //         .text
 
 #include "mxdrv_config.h"
-
 #if MXDRV_ENABLE_PORTABLE_CODE
 	#include <string.h>		/* for memset */
 	#include <mxdrv.h>
@@ -684,7 +683,8 @@ int MXDRV_SetData2(
 	memcpy(pdxOnMemoryPool, pdx, pdxsize);
 #endif
 #if MXDRV_ENABLE_PORTABLE_CODE
-	X68REG reg = {0};
+	X68REG reg;
+	memset(&reg, 0, sizeof(reg));
 #else
 	X68REG reg;
 #endif
@@ -848,7 +848,8 @@ uint32_t MXDRV_MeasurePlayTime2(
 	int fadeout
 ) {
 #if MXDRV_ENABLE_PORTABLE_CODE
-	X68REG reg = {0};
+	X68REG reg;
+	memset(&reg, 0, sizeof(reg));
 	void (*opmintback)( MxdrvContext *context );
 #else
 	X68REG reg;
@@ -898,6 +899,10 @@ uint32_t MXDRV_MeasurePlayTime2(
 #endif
 
 	uint32_t ret = (DWORD)(G.PLAYTIME*(LONGLONG)1024/4000+(1-DBL_EPSILON))+2000;
+	/*uint32_t ret = (DWORD)(
+		WSInt64MultiplyNativeResult(G.PLAYTIME,
+		(uint32_t)WSInt64DivideNativeResult(1024,4000))+(1-DBL_EPSILON)
+		)+2000;*/
 	G.PLAYTIME = 0;
 	return ret;
 }
@@ -951,8 +956,9 @@ void MXDRV_PlayAt(
 
 ) {
 #if MXDRV_ENABLE_PORTABLE_CODE
-	X68REG reg = {0};
+	X68REG reg;
 	void (*opmintback)(MxdrvContext *context);
+	memset(&reg, 0, sizeof(reg));
 #else
 	X68REG reg;
 	void (CALLBACK *opmintback)(void);
@@ -1043,7 +1049,7 @@ int MXDRV_GetTerminated(
 	void
 #endif
 ) {
-	
+
 	if ( G.PLAYTIME >= G.MEASURETIMELIMIT ) {
 		return (1);
 	}
