@@ -17,9 +17,15 @@
 	#include <stdbool.h>
 #endif
 #if defined(__cplusplus) && !defined(NOTHROW)
-	#include <new.h>
-	template <class DATATYPE> void placement_new(
-		void* d, const DATATYPE& t) { new (d) DATATYPE(t); }
+	#if defined(__GNUC__) || defined(__clang__)
+		#include <new>
+	#else
+		#include <new.h>
+	#endif
+		template <class DATATYPE> void placement_new(
+			void* d, const DATATYPE& t) { new (d) DATATYPE(t); }
+		template <class DATATYPE> void placement_new_def(
+			void* d, const DATATYPE& t) { new (d) DATATYPE(); }
 #endif
 #ifdef __cplusplus
 extern "C" {

@@ -69,7 +69,7 @@ static bool MxdrvContextImpl_Initialize(
 	impl->m_pdxReservedMemoryPoolSize = 0;
 	impl->m_memoryPoolSizeInBytes = allocSizeInBytes - sizeof(MxdrvContextImpl);
 	impl->m_memoryPoolReserved = NULL;
-	placement_new(&impl->m_mtx, MutexWrapper());
+	placement_new_def(&impl->m_mtx, MutexWrapper());
 
 	if (X68SoundContext_Initialize(&impl->m_x68SoundContext, impl) == false) return false;
 
