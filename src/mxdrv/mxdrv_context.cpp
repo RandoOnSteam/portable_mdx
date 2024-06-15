@@ -5,18 +5,7 @@
 #include <mxdrv_context.h>
 #include "mxdrv_config.h"
 #include "mxdrv_context.internal.h"
-
-#if defined(__cplusplus) && !defined(NOTHROW)
-	#if defined(__GNUC__) || defined(__clang__)
-		#include <new>
-	#else
-		#include <new.h>
-	#endif
-		template <class DATATYPE> void placement_new(
-			void* d, const DATATYPE& t) { new (d) DATATYPE(t); }
-		template <class DATATYPE> void placement_new_def(
-			void* d, const DATATYPE& t) { new (d) DATATYPE(); }
-#endif
+#include "placement_new.h"
 
 void MxdrvContextImpl_ResetMemoryPool(
 	MxdrvContextImpl *impl
@@ -81,7 +70,7 @@ static bool MxdrvContextImpl_Initialize(
 	impl->m_pdxReservedMemoryPoolSize = 0;
 	impl->m_memoryPoolSizeInBytes = allocSizeInBytes - sizeof(MxdrvContextImpl);
 	impl->m_memoryPoolReserved = NULL;
-	placement_new_def(&impl->m_mtx, MutexWrapper());
+	placement_new_def(&impl->m_mtx);
 
 	if (X68SoundContext_Initialize(&impl->m_x68SoundContext, impl) == false) return false;
 

@@ -6,6 +6,7 @@
 
 
 #include "mxdrv_context.h"
+#include "stdboolwrapper.h"
 #include "stdintwrapper.h"
 
 #ifdef __cplusplus

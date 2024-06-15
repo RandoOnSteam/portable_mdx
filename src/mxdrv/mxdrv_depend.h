@@ -7,22 +7,12 @@
 #include "mxdrv_config.h"
 
 #if MXDRV_ENABLE_PORTABLE_CODE
+	#include "stdintwrapper.h"
 	#ifdef _WIN32
 		#include <windows.h>
-		#if defined(_MSC_VER) && _MSC_VER <= 1400 /* 2005 <= */
-			#define nullptr NULL
-			#ifndef __cplusplus
-				#define bool int
-				#define true 1
-				#define false 0
-			#endif
-		#else
-			#include <stdint.h>
-		#endif
 	#else
 		#include <stdlib.h>
 		#define BOOL bool
-		#include <stdint.h>
 		typedef uint32_t UINT;
 		typedef uint8_t BYTE;
 		typedef uint32_t DWORD;

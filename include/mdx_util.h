@@ -3,8 +3,8 @@
 #ifndef __MDX_UTIL_H__
 #define __MDX_UTIL_H__
 
-#include "stdintwrapper.h"
 #include "stdboolwrapper.h"
+#include "stdintwrapper.h"
 
 #ifdef __cplusplus
 extern "C" {

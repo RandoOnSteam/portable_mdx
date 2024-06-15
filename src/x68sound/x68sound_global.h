@@ -4,26 +4,15 @@
 #include "x68sound_config.h"
 
 #if X68SOUND_ENABLE_PORTABLE_CODE
+	#include "stdintwrapper.h"
 	#ifdef _WIN32
 		#include <windows.h>
-		#if defined(_MSC_VER) && _MSC_VER <= 1400 /* 2005 <= */
-			#define nullptr NULL
-			#ifndef __cplusplus
-				#define bool int
-				#define true 1
-				#define false 0
-			#endif
-		#else
-			#include <stdint.h>
-		#endif
 	#else
 		#include <stdlib.h>
-		#include <stdint.h>
 		typedef unsigned int UINT;
 		typedef uint32_t DWORD;
 	#endif
 	#include <assert.h>
-	#include "stdintwrapper.h"
 #else
 	#include	<stdio.h>
 	#include	<stdlib.h>
@@ -204,38 +193,38 @@ static const int DT1TBL_org[128+4] = {
 #else
 int	DT1TBL_org[128+4] = {
 #endif
-	0, 0, 1, 2, 
-	0, 0, 1, 2, 
-	0, 0, 1, 2, 
-	0, 0, 1, 2, 
-	0, 1, 2, 2, 
-	0, 1, 2, 3, 
-	0, 1, 2, 3, 
-	0, 1, 2, 3, 
-	0, 1, 2, 4, 
-	0, 1, 3, 4, 
-	0, 1, 3, 4, 
-	0, 1, 3, 5, 
-	0, 2, 4, 5, 
-	0, 2, 4, 6, 
-	0, 2, 4, 6, 
-	0, 2, 5, 7, 
-	0, 2, 5, 8, 
-	0, 3, 6, 8, 
-	0, 3, 6, 9, 
-	0, 3, 7, 10, 
-	0, 4, 8, 11, 
-	0, 4, 8, 12, 
-	0, 4, 9, 13, 
-	0, 5, 10, 14, 
-	0, 5, 11, 16, 
-	0, 6, 12, 17, 
-	0, 6, 13, 19, 
-	0, 7, 14, 20, 
-	0, 8, 16, 22, 
-	0, 8, 16, 22, 
-	0, 8, 16, 22, 
-	0, 8, 16, 22, 
+	0, 0, 1, 2,
+	0, 0, 1, 2,
+	0, 0, 1, 2,
+	0, 0, 1, 2,
+	0, 1, 2, 2,
+	0, 1, 2, 3,
+	0, 1, 2, 3,
+	0, 1, 2, 3,
+	0, 1, 2, 4,
+	0, 1, 3, 4,
+	0, 1, 3, 4,
+	0, 1, 3, 5,
+	0, 2, 4, 5,
+	0, 2, 4, 6,
+	0, 2, 4, 6,
+	0, 2, 5, 7,
+	0, 2, 5, 8,
+	0, 3, 6, 8,
+	0, 3, 6, 9,
+	0, 3, 7, 10,
+	0, 4, 8, 11,
+	0, 4, 8, 12,
+	0, 4, 9, 13,
+	0, 5, 10, 14,
+	0, 5, 11, 16,
+	0, 6, 12, 17,
+	0, 6, 13, 19,
+	0, 7, 14, 20,
+	0, 8, 16, 22,
+	0, 8, 16, 22,
+	0, 8, 16, 22,
+	0, 8, 16, 22,
 };
 
 typedef struct {
@@ -493,7 +482,7 @@ volatile int	setPcmBufPtr=-1;
 	#define	THREADMES_WAVEOUTDONE	(WM_USER+1)
 	#define	THREADMES_KILL	(WM_USER+2)
 
-void CALLBACK waveOutProc(HWAVEOUT hwo, UINT uMsg, DWORD dwInstance, 
+void CALLBACK waveOutProc(HWAVEOUT hwo, UINT uMsg, DWORD dwInstance,
 						  DWORD dwParam1, DWORD dwParam2);
 DWORD WINAPI waveOutThread( LPVOID );
 void CALLBACK OpmTimeProc(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD dw2);
@@ -775,7 +764,7 @@ void OpmFir_MMX(short *p, short *buf0, short *buf1, int *result) {
 		paddd	mm2,mm4
 
 		mov		ecx,result
-		
+
 		movd	eax,mm1
 		psrlq	mm1,32
 		movd	ebx,mm1
@@ -924,7 +913,7 @@ void OpmFir_MMX(short *p, short *buf0, short *buf1, int *result) {
 
 		pmaddwd	mm3,mm0
 		pmaddwd	mm4,mm0
-	
+
 		mov		edi,result
 
 		paddd	mm1,mm3

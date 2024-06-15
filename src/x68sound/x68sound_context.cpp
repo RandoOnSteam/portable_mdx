@@ -8,6 +8,7 @@
 #include "x68sound_global.h"
 #include "x68sound_opm.h"
 #include "x68sound_context.internal.h"
+#include "placement_new.h"
 
 static bool X68SoundContextImpl_Initialize(
 	X68SoundContextImpl *impl,
@@ -42,8 +43,7 @@ static bool X68SoundContextImpl_Initialize(
 
 	impl->m_RandSeed = 1;
 
-#undef new
-	new(&impl->m_opm) Opm(impl);
+	placement_new(&impl->m_opm, impl);
 
 	return true;
 }
