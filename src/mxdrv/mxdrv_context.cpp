@@ -6,6 +6,18 @@
 #include "mxdrv_config.h"
 #include "mxdrv_context.internal.h"
 
+#if defined(__cplusplus) && !defined(NOTHROW)
+	#if defined(__GNUC__) || defined(__clang__)
+		#include <new>
+	#else
+		#include <new.h>
+	#endif
+		template <class DATATYPE> void placement_new(
+			void* d, const DATATYPE& t) { new (d) DATATYPE(t); }
+		template <class DATATYPE> void placement_new_def(
+			void* d, const DATATYPE& t) { new (d) DATATYPE(); }
+#endif
+
 void MxdrvContextImpl_ResetMemoryPool(
 	MxdrvContextImpl *impl
 ){

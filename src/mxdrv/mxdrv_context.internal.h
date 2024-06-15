@@ -9,23 +9,7 @@
 #include <x68sound_context.h>
 #include "mxdrv_config.h"
 #include "mxdrv_depend.h"
-
-#if defined(_WIN32)
-	#include <windows.h>
-	class MutexWrapper
-	{
-	public:
-		MutexWrapper() { mH = CreateMutex(NULL, FALSE, NULL); }
-		~MutexWrapper() { CloseHandle(mH); }
-		void lock() { WaitForSingleObject(mH, INFINITE); }
-		void unlock() { ReleaseMutex(mH); }
-		void* mH;
-	};
-#else
-	#include <mutex>
-	typedef std::mutex MutexWrapper;
-#endif
-
+#include "mutexwrapper.h"
 
 typedef struct tagMxdrvContextImpl {
 	ULONG m_D0;

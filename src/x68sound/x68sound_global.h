@@ -8,8 +8,6 @@
 		#include <windows.h>
 		#if defined(_MSC_VER) && _MSC_VER <= 1400 /* 2005 <= */
 			#define nullptr NULL
-			#define override
-			#define alignas(x) /* not supported */
 			#ifndef __cplusplus
 				#define bool int
 				#define true 1

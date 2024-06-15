@@ -4,20 +4,7 @@
 #define __MXDRV_CONTEXT_H__
 
 
-#if defined(_MSC_VER) && _MSC_VER <= 1400 /* 2005 <= */
-	#define nullptr NULL
-	#define override
-	#define alignas(x) /* not supported */
-	#ifndef __cplusplus
-		#define bool int
-		#define true 1
-		#define false 0
-	#endif
-#else
-	#include <stdbool.h>
-	#include <stdlib.h>
-	#include <assert.h>
-#endif
+#include "stdboolwrapper.h"
 #include "stdintwrapper.h"
 
 #ifdef __cplusplus

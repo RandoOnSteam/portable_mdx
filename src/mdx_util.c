@@ -1,22 +1,8 @@
 ﻿/* Copyright (C) 2018 Yosshin(@yosshin4004) */
 
-#if defined(_MSC_VER) && _MSC_VER <= 1400 /* 2005 <= */
-	#define nullptr NULL
-	#define override
-	#define alignas(x) /* not supported */
-	#ifndef __cplusplus
-		#define bool int
-		#define true 1
-		#define false 0
-	#endif
-#else
-	#include <string.h>		/* for memcpy */
-	#include <stdint.h>
-	#include <stdbool.h>
-	#include <stdio.h>
-#endif
 #include <mdx_util.h>
 #include <assert.h>
+#include <string.h> /* memcpy */
 
 /* MDX ファイルイメージのシーク */
 bool MdxSeekFileImage(

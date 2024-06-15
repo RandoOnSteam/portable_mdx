@@ -1,3 +1,5 @@
+#ifndef __STDINTWRAPPER_H__
+#define __STDINTWRAPPER_H__
 #if !defined(__clang__) /* For Metrowerks and others, clang complains */
 	#define __STDC_LIMIT_MACROS
 	#define __STDC_CONSTANT_MACROS
@@ -66,3 +68,4 @@
 #else/*  !(defined(_M_X64) || defined(__LP64__)) */
 #define WSNO64
 #endif
+#endif /* __STDINTWRAPPER_H__ */
