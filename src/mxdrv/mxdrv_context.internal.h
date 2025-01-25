@@ -81,7 +81,7 @@ typedef struct tagMxdrvContextImpl {
 	bool m_logicalSumOfKeyOnFlagsForPcm[8];
 
 	/* 再入防止用 */
-	MutexWrapper m_mtx;	/* 配置 new delete が必要 */
+	MUTEXWRAPPER m_mtx;	/* 配置 new delete が必要 */
 
 	/*
 		メモリプール領域は、MxdrvContextImpl 構造体から相対アドレス 32bit の

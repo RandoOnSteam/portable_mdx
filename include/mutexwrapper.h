@@ -2,15 +2,18 @@
 #define __MUTEXWRAPPER_H__
 #if defined(_WIN32)
 	#include <windows.h>
-	class MutexWrapper
+	typedef struct MUTEXWRAPPER
 	{
-	public:
-		MutexWrapper() { mH = CreateMutex(NULL, FALSE, NULL); }
-		~MutexWrapper() { CloseHandle(mH); }
-		void lock() { WaitForSingleObject(mH, INFINITE); }
-		void unlock() { ReleaseMutex(mH); }
 		void* mH;
-	};
+	} MUTEXWRAPPER;
+	#define MutexWrapper_Construct(pThis) \
+		(pThis)->mH = CreateMutex(NULL, FALSE, NULL);
+	#define MutexWrapper_Destruct(pThis) \
+		CloseHandle((pThis)->mH);
+	#define MutexWrapper_lock(pThis) \
+		WaitForSingleObject((pThis)->mH, INFINITE);
+	#define MutexWrapper_unlock(pThis) \
+		ReleaseMutex((pThis)->mH);
 #else
 	#include <mutex>
 	typedef std::mutex MutexWrapper;

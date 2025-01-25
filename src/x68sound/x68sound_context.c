@@ -1,14 +1,11 @@
 ﻿// Copyright (C) m_puusan
 /* Copyright (C) 2018 Yosshin(@yosshin4004) */
-
-#include <new>			/* for placement new/delete */
 #include <string.h>		/* for memset */
 #include <x68sound_context.h>
 #include "x68sound_config.h"
 #include "x68sound_global.h"
 #include "x68sound_opm.h"
 #include "x68sound_context.internal.h"
-#include "placement_new.h"
 
 static bool X68SoundContextImpl_Initialize(
 	X68SoundContextImpl *impl,
@@ -43,7 +40,7 @@ static bool X68SoundContextImpl_Initialize(
 
 	impl->m_RandSeed = 1;
 
-	placement_new(&impl->m_opm, impl);
+	Opm_ConstructWithX68SoundContextImpl(&impl->m_opm, impl);
 
 	return true;
 }
@@ -51,7 +48,7 @@ static bool X68SoundContextImpl_Initialize(
 static bool X68SoundContextImpl_Terminate(
 	X68SoundContextImpl *impl
 ){
-	impl->m_opm.~Opm();
+	Opm_Destruct(&impl->m_opm);
 
 	return true;
 }

@@ -70,7 +70,7 @@ static bool MxdrvContextImpl_Initialize(
 	impl->m_pdxReservedMemoryPoolSize = 0;
 	impl->m_memoryPoolSizeInBytes = allocSizeInBytes - sizeof(MxdrvContextImpl);
 	impl->m_memoryPoolReserved = NULL;
-	placement_new_def(&impl->m_mtx);
+	MutexWrapper_Construct(&impl->m_mtx);
 
 	if (X68SoundContext_Initialize(&impl->m_x68SoundContext, impl) == false) return false;
 
@@ -81,7 +81,7 @@ static bool MxdrvContextImpl_Terminate(
 	MxdrvContextImpl *impl
 ){
 	if (X68SoundContext_Terminate(&impl->m_x68SoundContext) == false) return false;
-	impl->m_mtx.~MutexWrapper();
+	MutexWrapper_Destruct(&impl->m_mtx);
 
 	return true;
 }
@@ -134,13 +134,13 @@ bool MxdrvContext_GetPcmKeyOn(
 void MxdrvContext_EnterCriticalSection(
 	MxdrvContext *context
 ){
-	context->m_impl->m_mtx.lock();
+	MutexWrapper_lock(&context->m_impl->m_mtx);
 }
 
 void MxdrvContext_LeaveCriticalSection(
 	MxdrvContext *context
 ){
-	context->m_impl->m_mtx.unlock();
+	MutexWrapper_unlock(&context->m_impl->m_mtx);
 }
 
 bool MxdrvContext_Initialize(

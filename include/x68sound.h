@@ -43,8 +43,7 @@ void X68Sound_DmaInt(struct tagX68SoundContext *context, void (*proc)(void *), v
 void X68Sound_DmaErrInt(struct tagX68SoundContext *context, void (*Proc)(void *), void *arg);
 void X68Sound_MemReadFunc(struct tagX68SoundContext *context, int (*func)(unsigned char *));
 
-void X68Sound_WaveFunc(struct tagX68SoundContext *context, int (*func)(void *));
-
+void X68Sound_WaveFunc(struct tagX68SoundContext *context, int (*func)(void *), void *arg);
 int X68Sound_Pcm8_Out(struct tagX68SoundContext *context, int ch, void *adrs, int mode, int len);
 int X68Sound_Pcm8_Aot(struct tagX68SoundContext *context, int ch, void *tbl, int mode, int cnt);
 int X68Sound_Pcm8_Lot(struct tagX68SoundContext *context, int ch, void *tbl, int mode);
