@@ -12,6 +12,9 @@
 	Ported for 64bit environments
 		Copyright (C) 2018 Yosshin.
 
+	Further modifications & translation to C
+		Copyright (C) 2025 Ryan Norton.
+
 # スクリーンショット
 example の simple_player 実行中のスクリーンショット。
 ![screen_shot](https://user-images.githubusercontent.com/11882108/69473608-bb61fb80-0df9-11ea-9edc-81b37ccd7cac.png)
@@ -31,6 +34,7 @@ GORRY 氏の MXDRVg V2.00b と、m_puusan 氏の X68Sound.dll（src 020615）の
 * dll でない
 * OPM レジスタ値取得 API、キーオン取得 API が拡張されている
 * mdx ファイルのパースを簡単に行えるユーティリティ関数が拡張されている
+* Cでコンパイル可能
 
 # 使い方
 ドキュメントは用意されていません。サンプルコードをご参照ください。
@@ -84,10 +88,11 @@ GORRY 氏の MXDRVg V2.00b と、m_puusan 氏の X68Sound.dll（src 020615）の
 	該当ファイル  
 	* include/x68sound.h
 	* x68sound/*
-
-	X68Sound.dll のソースコードを元に、Yosshin が改変を行ったものです。
-	Yosshin による改変箇所のライセンスは、オリジナル版の X68Sound.dll に従う
-	ものとします。
+		
+	これは、X68Sound.dll のソースコードに基づいて Yosshin と Ryan Norton 
+	によって行われた変更です。Yosshin と Ryan Norton 
+	によって行われた変更のライセンスは、X68Sound.dll 
+	のオリジナルバージョンのライセンスに従います。
 
 	オリジナル版のライセンスは以下の通りです（readme.txt より抜粋）
 
