@@ -15,7 +15,18 @@
 	#define MutexWrapper_unlock(pThis) \
 		ReleaseMutex((pThis)->mH);
 #else
-	#include <mutex>
-	typedef std::mutex MutexWrapper;
+	#include <pthread.h>
+	typedef struct MUTEXWRAPPER
+	{
+		pthread_mutex_t mutex;
+	} MUTEXWRAPPER;
+	#define MutexWrapper_Construct(pThis) \
+		pthread_mutex_init(&(pThis)->mutex, NULL);
+	#define MutexWrapper_Destruct(pThis) \
+		pthread_mutex_destroy(&(pThis)->mutex);
+	#define MutexWrapper_lock(pThis) \
+		pthread_mutex_lock(&(pThis)->mutex);
+	#define MutexWrapper_unlock(pThis) \
+		pthread_mutex_unlock(&(pThis)->mutex);
 #endif
 #endif /* __MUTEXWRAPPER_H__ */

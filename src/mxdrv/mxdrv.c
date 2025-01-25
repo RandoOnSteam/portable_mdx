@@ -1151,8 +1151,9 @@ static void ADPCMOUT(
 		ZEL2_.MDX にて、A1 が不正なポインタの状態でここが実行される。
 		対症療法で回避。
 	*/
-	if (&context->m_impl->m_memoryPool[0] <= addr
-	&&	addr < &context->m_impl->m_memoryPool[context->m_impl->m_memoryPoolSizeInBytes]) {
+	if (&context->m_impl->m_memoryPool[0] <= (uint8_t*)addr
+			&&	(uint8_t*)addr < &context->m_impl->m_memoryPool[
+						context->m_impl->m_memoryPoolSizeInBytes]) {
 		_iocs_adpcmout( context, TO_PTR(A1), D1, D2 );
 	} else {
 //		printf("invalid A1 %08X\n", A1);
