@@ -261,6 +261,7 @@ static void ADPCMMOD_END( MxdrvContext *context );
 static void MX_ABORT( MxdrvContext *context );
 
 static void OPMINTFUNC(void *);
+static void OPMINTFUNCNOLOCK(void *);
 
 static void L_PAUSE_( MxdrvContext *context );
 #else
@@ -388,9 +389,8 @@ static void ADPCMMOD_END( void );
 
 static void MX_ABORT( void );
 
-static void CALLBACK OPMINTFUNC(
-	void
-);
+static void CALLBACK OPMINTFUNC( void );
+static void CALLBACK OPMINTFUNCNOLOCK( void );
 
 static void L_PAUSE_(
 	void
@@ -1005,14 +1005,24 @@ void MXDRV_PlayAt(
 	opmwaitback = X68Sound_OpmWait(-1);
 	X68Sound_OpmWait(1);
 #endif
+#if MXDRV_ENABLE_PORTABLE_CODE
+	MxdrvContext_EnterCriticalSection( context );
+#else
+	EnterCriticalSection( &CS_OPMINT );
+#endif
 	while ( G.PLAYTIME < playat ) {
 		if ( TerminatePlay ) break;
 #if MXDRV_ENABLE_PORTABLE_CODE
-		OPMINTFUNC( context );
+		OPMINTFUNCNOLOCK( context );
 #else
-		OPMINTFUNC();
+		OPMINTFUNCNOLOCK();
 #endif
 	}
+#if MXDRV_ENABLE_PORTABLE_CODE
+	MxdrvContext_LeaveCriticalSection( context );
+#else
+	LeaveCriticalSection( &CS_OPMINT );
+#endif
 #if MXDRV_ENABLE_PORTABLE_CODE
 	X68Sound_OpmWait( &context->m_impl->m_x68SoundContext, opmwaitback );
 #else
@@ -1195,6 +1205,32 @@ static void ADPCMMOD_END(
 /***************************************************************/
 
 #if MXDRV_ENABLE_PORTABLE_CODE
+static void OPMINTFUNCNOLOCK(
+	void	*arg
+#else
+static void CALLBACK OPMINTFUNCNOLOCK(
+	void
+#endif
+) {
+#if MXDRV_ENABLE_PORTABLE_CODE
+	MxdrvContext *context = (MxdrvContext *)arg;
+#endif
+#if MXDRV_ENABLE_PORTABLE_CODE
+	OPMINT_FUNC( context );
+#else
+	OPMINT_FUNC();
+#endif
+	if ( !G.STOPMUSICTIMER ) {
+		G.PLAYTIME += 256-G.MUSICTIMER; // OPMBUF[0x12];
+	}
+#if MXDRV_ENABLE_PORTABLE_CODE
+	if ( MXCALLBACK_OPMINT ) MXCALLBACK_OPMINT( context );
+#else
+	if ( MXCALLBACK_OPMINT ) MXCALLBACK_OPMINT();
+#endif
+}
+
+#if MXDRV_ENABLE_PORTABLE_CODE
 static void OPMINTFUNC(
 	void	*arg
 #else
@@ -1212,17 +1248,9 @@ static void CALLBACK OPMINTFUNC(
 	EnterCriticalSection( &CS_OPMINT );
 #endif
 #if MXDRV_ENABLE_PORTABLE_CODE
-	OPMINT_FUNC( context );
+	OPMINTFUNCNOLOCK(arg);
 #else
-	OPMINT_FUNC();
-#endif
-	if ( !G.STOPMUSICTIMER ) {
-		G.PLAYTIME += 256-G.MUSICTIMER; // OPMBUF[0x12];
-	}
-#if MXDRV_ENABLE_PORTABLE_CODE
-	if ( MXCALLBACK_OPMINT ) MXCALLBACK_OPMINT( context );
-#else
-	if ( MXCALLBACK_OPMINT ) MXCALLBACK_OPMINT();
+	OPMINTFUNCNOLOCK();
 #endif
 #if MXDRV_ENABLE_PORTABLE_CODE
 	MxdrvContext_LeaveCriticalSection( context );
