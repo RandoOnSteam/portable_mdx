@@ -958,24 +958,32 @@ void MXDRV_PlayAt(
 #if MXDRV_ENABLE_PORTABLE_CODE
 	X68REG reg;
 	void (*opmintback)(MxdrvContext *context);
-	memset(&reg, 0, sizeof(reg));
 #else
 	X68REG reg;
 	void (CALLBACK *opmintback)(void);
 #endif
 	UWORD chmaskback;
 	int opmwaitback;
+	int volume;
+
+	playat = (DWORD)(playat*(LONGLONG)4000/1024);
 
 #if MXDRV_ENABLE_PORTABLE_CODE
-	X68Sound_OpmInt( &context->m_impl->m_x68SoundContext, NULL, NULL );
-#else
-	X68Sound_OpmInt( NULL );
+	memset(&reg, 0, sizeof(reg));
 #endif
 
+	if(playat < G.PLAYTIME)
+	{
+	#if MXDRV_ENABLE_PORTABLE_CODE
+		X68Sound_OpmInt( &context->m_impl->m_x68SoundContext, NULL, NULL );
+	#else
+		X68Sound_OpmInt( NULL );
+	#endif
+	}
 	TerminatePlay = FALSE;
 	LoopCount = 0;
-	LoopLimit = loop;
 	FadeoutStart = FALSE;
+	LoopLimit = loop;
 	ReqFadeout = fadeout;
 
 #if MXDRV_ENABLE_PORTABLE_CODE
@@ -983,8 +991,6 @@ void MXDRV_PlayAt(
 #else
 	L_PLAY();
 #endif
-
-	playat = (DWORD)(playat*(LONGLONG)4000/1024);
 
 	opmintback = MXCALLBACK_OPMINT;
 	MXCALLBACK_OPMINT = MXDRV_MeasurePlayTime_OPMINT;
@@ -1001,10 +1007,15 @@ void MXDRV_PlayAt(
 #if MXDRV_ENABLE_PORTABLE_CODE
 	opmwaitback = X68Sound_OpmWait(&context->m_impl->m_x68SoundContext, -1);
 	X68Sound_OpmWait(&context->m_impl->m_x68SoundContext, 1);
+	volume = X68Sound_GetTotalVolume( &context->m_impl->m_x68SoundContext);
+	X68Sound_TotalVolume(&context->m_impl->m_x68SoundContext, 0);
 #else
 	opmwaitback = X68Sound_OpmWait(-1);
 	X68Sound_OpmWait(1);
+	volume = X68Sound_GetTotalVolume();
+	X68Sound_TotalVolume(0);
 #endif
+
 #if MXDRV_ENABLE_PORTABLE_CODE
 	MxdrvContext_EnterCriticalSection( context );
 #else
@@ -1026,15 +1037,17 @@ void MXDRV_PlayAt(
 #if MXDRV_ENABLE_PORTABLE_CODE
 	X68Sound_OpmWait( &context->m_impl->m_x68SoundContext, opmwaitback );
 #else
-	X68Sound_OpmWait(opmwaitback);
+	X68Sound_OpmWait( opmwaitback );
 #endif
 
 	G.L001e1c = chmaskback;
 	MXCALLBACK_OPMINT = opmintback;
 #if MXDRV_ENABLE_PORTABLE_CODE
 	X68Sound_OpmInt( &context->m_impl->m_x68SoundContext, &OPMINTFUNC, (void *)context );
+	X68Sound_TotalVolume( &context->m_impl->m_x68SoundContext, volume );
 #else
 	X68Sound_OpmInt( &OPMINTFUNC );
+	X68Sound_TotalVolume( volume );
 #endif
 }
 
