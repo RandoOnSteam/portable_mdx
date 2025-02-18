@@ -13,29 +13,30 @@
 	#include "x68sound_context.internal.h"
 #endif
 
-
-
-
-
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 #if X68SOUND_ENABLE_PORTABLE_CODE
 	/* X68SoundContext に移動 */
 #else
-Opm	opm;
+OPM	opm;
 #endif
 //MMTIME	mmt;
 
 #if !X68SOUND_ENABLE_PORTABLE_CODE
-void CALLBACK waveOutProc(HWAVEOUT hwo, UINT uMsg, DWORD dwInstance, 
+void CALLBACK waveOutProc(HWAVEOUT hwo, UINT uMsg, DWORD dwInstance,
 						  DWORD dwParam1, DWORD dwParam2) {
 	if (uMsg == WOM_DONE && thread_flag) {
+		int playptr;
+		int genptr;
 		timer_start_flag = 1;	// マルチメディアタイマーの処理を開始
 
 
 		playingblk = (playingblk+1) & (N_waveblk-1);
-		int playptr = playingblk * Blk_Samples;
-		
-		int genptr = opm.PcmBufPtr;
+		playptr = playingblk * Blk_Samples;
+
+		genptr = opm.PcmBufPtr;
 		if (genptr < playptr) {
 			genptr += opm.PcmBufSize;
 		}
@@ -73,14 +74,14 @@ void CALLBACK waveOutProc(HWAVEOUT hwo, UINT uMsg, DWORD dwInstance,
 #endif
 
 #if !X68SOUND_ENABLE_PORTABLE_CODE
-DWORD WINAPI waveOutThread( LPVOID ) {
+DWORD WINAPI waveOutThread( LPVOID lpContext ) {
 	MSG Msg;
-
+	(void)(lpContext);
 	thread_flag = 1;
 
 	while (GetMessage( &Msg, NULL, 0, 0)) {
 		if (Msg.message == THREADMES_WAVEOUTDONE) {
-			
+
 			waveOutWrite(hwo, lpwh+waveblk, sizeof(WAVEHDR));
 
 			++waveblk;
@@ -110,20 +111,20 @@ void CALLBACK OpmTimeProc(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD dw
 			opm.PcmBufPtr = setPcmBufPtr;
 			setPcmBufPtr = -1;
 		}
-		
-		opm.PushRegs();
+
+		Opm_PushRegs(&opm);
 
 		if (Samprate != 22050) {
-			opm.pcmset62(nSamples);
+			Opm_pcmset62(&opm, nSamples);
 		} else {
-			opm.pcmset22(nSamples);
+			Opm_pcmset22(&opm, nSamples);
 		}
 
-//		opm.timer();
-		opm.betwint();
+//		Opm_timer(&opm);
+		Opm_betwint(&opm);
 
 
-		opm.PopRegs();
+		Opm_PopRegs(&opm);
 
 
 /*
@@ -151,110 +152,110 @@ void CALLBACK OpmTimeProc(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD dw
 #if X68SOUND_ENABLE_PORTABLE_CODE
 int X68Sound_Start(X68SoundContext *context, int samprate, int opmflag, int adpcmflag,
 				  int betw, int pcmbuf, int late, double rev) {
-	return context->m_impl->m_opm.Start(samprate, opmflag, adpcmflag, betw, pcmbuf, late, rev);
+	return Opm_Start(&context->m_impl->m_opm, samprate, opmflag, adpcmflag, betw, pcmbuf, late, rev);
 }
 int X68Sound_Samprate(X68SoundContext *context, int samprate) {
-	return context->m_impl->m_opm.SetSamprate(samprate);
+	return Opm_SetSamprate(&context->m_impl->m_opm, samprate);
 }
 int X68Sound_OpmClock(X68SoundContext *context, int clock) {
-	return context->m_impl->m_opm.SetOpmClock(clock);
+	return Opm_SetOpmClock(&context->m_impl->m_opm, clock);
 }
 void X68Sound_Reset(X68SoundContext *context) {
-	context->m_impl->m_opm.Reset();
+	Opm_Reset(&context->m_impl->m_opm);
 }
 void X68Sound_Free(X68SoundContext *context) {
-	context->m_impl->m_opm.Free();
+	Opm_Free(&context->m_impl->m_opm);
 }
 void X68Sound_BetwInt(X68SoundContext *context, void (*proc)(void *), void *arg) {
-	context->m_impl->m_opm.BetwInt(proc, arg);
+	Opm_BetwInt(&context->m_impl->m_opm, proc, arg);
 }
 
 int X68Sound_StartPcm(X68SoundContext *context, int samprate, int opmflag, int adpcmflag, int pcmbuf) {
-	return context->m_impl->m_opm.StartPcm(samprate, opmflag, adpcmflag, pcmbuf);
+	return Opm_StartPcm(&context->m_impl->m_opm, samprate, opmflag, adpcmflag, pcmbuf);
 }
 int X68Sound_GetPcm(X68SoundContext *context, void *buf, int len) {
-	return context->m_impl->m_opm.GetPcm(buf, len);
+	return Opm_GetPcm(&context->m_impl->m_opm, buf, len);
 }
 
 unsigned char X68Sound_OpmPeek(X68SoundContext *context) {
-	return context->m_impl->m_opm.OpmPeek();
+	return Opm_OpmPeek(&context->m_impl->m_opm);
 }
 void X68Sound_OpmReg(X68SoundContext *context, unsigned char no) {
-	context->m_impl->m_opm.OpmReg(no);
+	Opm_OpmReg(&context->m_impl->m_opm, no);
 }
 void X68Sound_OpmPoke(X68SoundContext *context, unsigned char data) {
-	context->m_impl->m_opm.OpmPoke(data);
+	Opm_OpmPoke(&context->m_impl->m_opm, data);
 }
 void X68Sound_OpmInt(X68SoundContext *context, void (*proc)(void *), void *arg) {
-	context->m_impl->m_opm.OpmInt(proc, arg);
+	Opm_OpmInt(&context->m_impl->m_opm, proc, arg);
 }
 int X68Sound_OpmWait(X68SoundContext *context, int wait) {
-	return context->m_impl->m_opm.SetOpmWait(wait);
+	return Opm_SetOpmWait(&context->m_impl->m_opm, wait);
 }
 
 unsigned char X68Sound_AdpcmPeek(X68SoundContext *context) {
-	return context->m_impl->m_opm.AdpcmPeek();
+	return Opm_AdpcmPeek(&context->m_impl->m_opm);
 }
 void X68Sound_AdpcmPoke(X68SoundContext *context, unsigned char data) {
-	context->m_impl->m_opm.AdpcmPoke(data);
+	Opm_AdpcmPoke(&context->m_impl->m_opm, data);
 }
 unsigned char X68Sound_PpiPeek(X68SoundContext *context) {
-	return context->m_impl->m_opm.PpiPeek();
+	return Opm_PpiPeek(&context->m_impl->m_opm);
 }
 void X68Sound_PpiPoke(X68SoundContext *context, unsigned char data) {
-	context->m_impl->m_opm.PpiPoke(data);
+	Opm_PpiPoke(&context->m_impl->m_opm, data);
 }
 void X68Sound_PpiCtrl(X68SoundContext *context, unsigned char data) {
-	context->m_impl->m_opm.PpiCtrl(data);
+	Opm_PpiCtrl(&context->m_impl->m_opm, data);
 }
 unsigned char X68Sound_DmaPeek(X68SoundContext *context, unsigned char adrs) {
-	return context->m_impl->m_opm.DmaPeek(adrs);
+	return Opm_DmaPeek(&context->m_impl->m_opm, adrs);
 }
 void X68Sound_DmaPoke(X68SoundContext *context, unsigned char adrs, unsigned char data) {
-	context->m_impl->m_opm.DmaPoke(adrs, data);
+	Opm_DmaPoke(&context->m_impl->m_opm, adrs, data);
 }
 void X68Sound_DmaInt(X68SoundContext *context, void (*proc)(void *), void *arg) {
-	context->m_impl->m_opm.DmaInt(proc, arg);
+	Opm_DmaInt(&context->m_impl->m_opm, proc, arg);
 }
 void X68Sound_DmaErrInt(X68SoundContext *context, void (*proc)(void *), void *arg) {
-	context->m_impl->m_opm.DmaErrInt(proc, arg);
+	Opm_DmaErrInt(&context->m_impl->m_opm, proc, arg);
 }
 void X68Sound_MemReadFunc(X68SoundContext *context, int (*func)(unsigned char *)) {
-	context->m_impl->m_opm.MemReadFunc(func);
+	Opm_MemReadFunc(&context->m_impl->m_opm, func);
 }
 
 void X68Sound_WaveFunc(X68SoundContext *context, int (*func)(void *), void *arg) {
-	context->m_impl->m_opm.SetWaveFunc(func, arg);
+	Opm_SetWaveFunc(&context->m_impl->m_opm, func, arg);
 }
 
 int X68Sound_Pcm8_Out(X68SoundContext *context, int ch, void *adrs, int mode, int len) {
-	return context->m_impl->m_opm.Pcm8_Out(ch, adrs, mode, len);
+	return Opm_Pcm8_Out(&context->m_impl->m_opm, ch, adrs, mode, len);
 }
 int X68Sound_Pcm8_Aot(X68SoundContext *context, int ch, void *tbl, int mode, int cnt) {
-	return context->m_impl->m_opm.Pcm8_Aot(ch, tbl, mode, cnt);
+	return Opm_Pcm8_Aot(&context->m_impl->m_opm, ch, tbl, mode, cnt);
 }
 int X68Sound_Pcm8_Lot(X68SoundContext *context, int ch, void *tbl, int mode) {
-	return context->m_impl->m_opm.Pcm8_Lot(ch, tbl, mode);
+	return Opm_Pcm8_Lot(&context->m_impl->m_opm, ch, tbl, mode);
 }
 int X68Sound_Pcm8_SetMode(X68SoundContext *context, int ch, int mode) {
-	return context->m_impl->m_opm.Pcm8_SetMode(ch, mode);
+	return Opm_Pcm8_SetMode(&context->m_impl->m_opm, ch, mode);
 }
 int X68Sound_Pcm8_GetRest(X68SoundContext *context, int ch) {
-	return context->m_impl->m_opm.Pcm8_GetRest(ch);
+	return Opm_Pcm8_GetRest(&context->m_impl->m_opm, ch);
 }
 int X68Sound_Pcm8_GetMode(X68SoundContext *context, int ch) {
-	return context->m_impl->m_opm.Pcm8_GetMode(ch);
+	return Opm_Pcm8_GetMode(&context->m_impl->m_opm, ch);
 }
 int X68Sound_Pcm8_Abort(X68SoundContext *context) {
-	return context->m_impl->m_opm.Pcm8_Abort();
+	return Opm_Pcm8_Abort(&context->m_impl->m_opm);
 }
 
 
 int X68Sound_TotalVolume(X68SoundContext *context, int v) {
-	return context->m_impl->m_opm.SetTotalVolume(v);
+	return Opm_SetTotalVolume(&context->m_impl->m_opm, v);
 }
 int X68Sound_GetTotalVolume(X68SoundContext *context) {
-	return context->m_impl->m_opm.GetTotalVolume();
+	return Opm_GetTotalVolume(&context->m_impl->m_opm);
 }
 
 
@@ -265,125 +266,128 @@ int X68Sound_DebugValue(X68SoundContext *context) {
 	return context->m_impl->m_DebugValue;
 }
 #else
-extern "C" int X68Sound_Start(int samprate, int opmflag, int adpcmflag,
+int X68Sound_Start(int samprate, int opmflag, int adpcmflag,
 				  int betw, int pcmbuf, int late, double rev) {
-	return opm.Start(samprate, opmflag, adpcmflag, betw, pcmbuf, late, rev);
+	return Opm_Start(&opm, samprate, opmflag, adpcmflag, betw, pcmbuf, late, rev);
 }
-extern "C" int X68Sound_Samprate(int samprate) {
-	return opm.SetSamprate(samprate);
+int X68Sound_Samprate(int samprate) {
+	return Opm_SetSamprate(&opm, samprate);
 }
-extern "C" int X68Sound_OpmClock(int clock) {
-	return opm.SetOpmClock(clock);
+int X68Sound_OpmClock(int clock) {
+	return Opm_SetOpmClock(&opm, clock);
 }
-extern "C" void X68Sound_Reset() {
-	opm.Reset();
+void X68Sound_Reset() {
+	Opm_Reset(&opm);
 }
-extern "C" void X68Sound_Free() {
-	opm.Free();
+void X68Sound_Free() {
+	Opm_Free(&opm);
 }
-extern "C" void X68Sound_BetwInt(void (CALLBACK *proc)()) {
-	opm.BetwInt(proc);
-}
-
-extern "C" int X68Sound_StartPcm(int samprate, int opmflag, int adpcmflag, int pcmbuf) {
-	return opm.StartPcm(samprate, opmflag, adpcmflag, pcmbuf);
-}
-extern "C" int X68Sound_GetPcm(void *buf, int len) {
-	return opm.GetPcm(buf, len);
+void X68Sound_BetwInt(void (CALLBACK *proc)()) {
+	Opm_BetwInt(&opm, proc);
 }
 
-extern "C" unsigned char X68Sound_OpmPeek() {
-	return opm.OpmPeek();
+int X68Sound_StartPcm(int samprate, int opmflag, int adpcmflag, int pcmbuf) {
+	return Opm_StartPcm(&opm, samprate, opmflag, adpcmflag, pcmbuf);
 }
-extern "C" void X68Sound_OpmReg(unsigned char no) {
-	opm.OpmReg(no);
-}
-extern "C" void X68Sound_OpmPoke(unsigned char data) {
-	opm.OpmPoke(data);
-}
-extern "C" void X68Sound_OpmInt(void (CALLBACK *proc)()) {
-	opm.OpmInt(proc);
-}
-extern "C" int X68Sound_OpmWait(int wait) {
-	return opm.SetOpmWait(wait);
+int X68Sound_GetPcm(void *buf, int len) {
+	return Opm_GetPcm(&opm, buf, len);
 }
 
-extern "C" unsigned char X68Sound_AdpcmPeek() {
-	return opm.AdpcmPeek();
+unsigned char X68Sound_OpmPeek() {
+	return Opm_OpmPeek(&opm);
 }
-extern "C" void X68Sound_AdpcmPoke(unsigned char data) {
-	opm.AdpcmPoke(data);
+void X68Sound_OpmReg(unsigned char no) {
+	Opm_OpmReg(&opm, no);
 }
-extern "C" unsigned char X68Sound_PpiPeek() {
-	return opm.PpiPeek();
+void X68Sound_OpmPoke(unsigned char data) {
+	Opm_OpmPoke(&opm, data);
 }
-extern "C" void X68Sound_PpiPoke(unsigned char data) {
-	opm.PpiPoke(data);
+void X68Sound_OpmInt(void (CALLBACK *proc)()) {
+	Opm_OpmInt(&opm, proc);
 }
-extern "C" void X68Sound_PpiCtrl(unsigned char data) {
-	opm.PpiCtrl(data);
-}
-extern "C" unsigned char X68Sound_DmaPeek(unsigned char adrs) {
-	return opm.DmaPeek(adrs);
-}
-extern "C" void X68Sound_DmaPoke(unsigned char adrs, unsigned char data) {
-	opm.DmaPoke(adrs, data);
-}
-extern "C" void X68Sound_DmaInt(void (CALLBACK *proc)()) {
-	opm.DmaInt(proc);
-}
-extern "C" void X68Sound_DmaErrInt(void (CALLBACK *proc)()) {
-	opm.DmaErrInt(proc);
-}
-extern "C" void X68Sound_MemReadFunc(int (CALLBACK *func)(unsigned char *)) {
-	opm.MemReadFunc(func);
+int X68Sound_OpmWait(int wait) {
+	return Opm_SetOpmWait(&opm, wait);
 }
 
-extern "C" void X68Sound_WaveFunc(int (CALLBACK *func)()) {
-	opm.SetWaveFunc(func);
+unsigned char X68Sound_AdpcmPeek() {
+	return Opm_AdpcmPeek(&opm);
+}
+void X68Sound_AdpcmPoke(unsigned char data) {
+	Opm_AdpcmPoke(&opm, data);
+}
+unsigned char X68Sound_PpiPeek() {
+	return Opm_PpiPeek(&opm);
+}
+void X68Sound_PpiPoke(unsigned char data) {
+	Opm_PpiPoke(&opm, data);
+}
+void X68Sound_PpiCtrl(unsigned char data) {
+	Opm_PpiCtrl(&opm, data);
+}
+unsigned char X68Sound_DmaPeek(unsigned char adrs) {
+	return Opm_DmaPeek(&opm, adrs);
+}
+void X68Sound_DmaPoke(unsigned char adrs, unsigned char data) {
+	Opm_DmaPoke(&opm, adrs, data);
+}
+void X68Sound_DmaInt(void (CALLBACK *proc)()) {
+	Opm_DmaInt(&opm, proc);
+}
+void X68Sound_DmaErrInt(void (CALLBACK *proc)()) {
+	Opm_DmaErrInt(&opm, proc);
+}
+void X68Sound_MemReadFunc(int (CALLBACK *func)(unsigned char *)) {
+	Opm_MemReadFunc(&opm, func);
 }
 
-extern "C" int X68Sound_Pcm8_Out(int ch, void *adrs, int mode, int len) {
-	return opm.Pcm8_Out(ch, adrs, mode, len);
-}
-extern "C" int X68Sound_Pcm8_Aot(int ch, void *tbl, int mode, int cnt) {
-	return opm.Pcm8_Aot(ch, tbl, mode, cnt);
-}
-extern "C" int X68Sound_Pcm8_Lot(int ch, void *tbl, int mode) {
-	return opm.Pcm8_Lot(ch, tbl, mode);
-}
-extern "C" int X68Sound_Pcm8_SetMode(int ch, int mode) {
-	return opm.Pcm8_SetMode(ch, mode);
-}
-extern "C" int X68Sound_Pcm8_GetRest(int ch) {
-	return opm.Pcm8_GetRest(ch);
-}
-extern "C" int X68Sound_Pcm8_GetMode(int ch) {
-	return opm.Pcm8_GetMode(ch);
-}
-extern "C" int X68Sound_Pcm8_Abort() {
-	return opm.Pcm8_Abort();
+void X68Sound_WaveFunc(int (CALLBACK *func)()) {
+	Opm_SetWaveFunc(&opm, func);
 }
 
-
-extern "C" int X68Sound_TotalVolume(int v) {
-	return opm.SetTotalVolume(v);
+int X68Sound_Pcm8_Out(int ch, void *adrs, int mode, int len) {
+	return Opm_Pcm8_Out(&opm, ch, adrs, mode, len);
 }
-extern "C" int X68Sound_GetTotalVolume(void) {
-	return opm.GetTotalVolume();
+int X68Sound_Pcm8_Aot(int ch, void *tbl, int mode, int cnt) {
+	return Opm_Pcm8_Aot(&opm, ch, tbl, mode, cnt);
+}
+int X68Sound_Pcm8_Lot(int ch, void *tbl, int mode) {
+	return Opm_Pcm8_Lot(&opm, ch, tbl, mode);
+}
+int X68Sound_Pcm8_SetMode(int ch, int mode) {
+	return Opm_Pcm8_SetMode(&opm, ch, mode);
+}
+int X68Sound_Pcm8_GetRest(int ch) {
+	return Opm_Pcm8_GetRest(&opm, ch);
+}
+int X68Sound_Pcm8_GetMode(int ch) {
+	return Opm_Pcm8_GetMode(&opm, ch);
+}
+int X68Sound_Pcm8_Abort() {
+	return Opm_Pcm8_Abort(&opm);
 }
 
 
+int X68Sound_TotalVolume(int v) {
+	return Opm_SetTotalVolume(&opm, v);
+}
+int X68Sound_GetTotalVolume(void) {
+	return Opm_GetTotalVolume(&opm);
+}
 
 
 
 
 
 
-extern "C" int X68Sound_ErrorCode() {
+
+
+int X68Sound_ErrorCode() {
 	return ErrorCode;
 }
-extern "C" int X68Sound_DebugValue() {
+int X68Sound_DebugValue() {
 	return DebugValue;
+}
+#endif
+#if defined(__cplusplus)
 }
 #endif
