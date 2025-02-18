@@ -49,13 +49,11 @@ typedef struct ADPCM {
 
 int	Adpcm_DmaGetByte(ADPCM* pThis);
 void  Adpcm_adpcm2pcm(ADPCM* pThis, unsigned char adpcm);
-
 void Adpcm_DmaError(ADPCM* pThis, unsigned char errcode);
 void Adpcm_DmaFinish(ADPCM* pThis);
 int Adpcm_DmaContinueSetNextMtcMar(ADPCM* pThis);
 int Adpcm_DmaArrayChainSetNextMtcMar(ADPCM* pThis);
 int Adpcm_DmaLinkArrayChainSetNextMtcMar(ADPCM* pThis);
-
 void Adpcm_ConstructWithX68SoundContextImpl(ADPCM* pThis,
 	struct tagX68SoundContextImpl *contextImpl);
 void Adpcm_Construct(ADPCM* pThis);
@@ -65,7 +63,6 @@ void Adpcm_InitSamprate(ADPCM* pThis);
 void Adpcm_Reset(ADPCM* pThis);
 int	Adpcm_GetPcm(ADPCM* pThis);
 int	Adpcm_GetPcm62(ADPCM* pThis);
-
 void Adpcm_SetAdpcmRate(ADPCM* pThis, int rate);
 
 #endif //__X68SOUND_ADPCM_H__
