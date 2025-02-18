@@ -5,6 +5,11 @@
 #include <mxdrv_context.h>
 #include "mxdrv_config.h"
 #include "mxdrv_context.internal.h"
+#include "placement_new.h"
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 void MxdrvContextImpl_ResetMemoryPool(
 	MxdrvContextImpl *impl
@@ -69,7 +74,7 @@ static bool MxdrvContextImpl_Initialize(
 	impl->m_pdxReservedMemoryPoolSize = 0;
 	impl->m_memoryPoolSizeInBytes = allocSizeInBytes - sizeof(MxdrvContextImpl);
 	impl->m_memoryPoolReserved = NULL;
-	new(&impl->m_mtx) std::mutex();
+	MutexWrapper_Construct(&impl->m_mtx);
 
 	if (X68SoundContext_Initialize(&impl->m_x68SoundContext, impl) == false) return false;
 
@@ -80,7 +85,7 @@ static bool MxdrvContextImpl_Terminate(
 	MxdrvContextImpl *impl
 ){
 	if (X68SoundContext_Terminate(&impl->m_x68SoundContext) == false) return false;
-	impl->m_mtx.~mutex();
+	MutexWrapper_Destruct(&impl->m_mtx);
 
 	return true;
 }
@@ -133,13 +138,13 @@ bool MxdrvContext_GetPcmKeyOn(
 void MxdrvContext_EnterCriticalSection(
 	MxdrvContext *context
 ){
-	context->m_impl->m_mtx.lock();
+	MutexWrapper_lock(&context->m_impl->m_mtx);
 }
 
 void MxdrvContext_LeaveCriticalSection(
 	MxdrvContext *context
 ){
-	context->m_impl->m_mtx.unlock();
+	MutexWrapper_unlock(&context->m_impl->m_mtx);
 }
 
 bool MxdrvContext_Initialize(
@@ -171,3 +176,6 @@ bool MxdrvContext_Terminate(
 
 	return true;
 }
+#if defined(__cplusplus)
+}
+#endif

@@ -60,67 +60,71 @@ typedef struct tagX68SoundContextImpl {
 
 	int m_RandSeed;
 
-	Opm m_opm;	/* 配置 new delete が必要 */
+	OPM m_opm;	/* 配置 new delete が必要 */
 } X68SoundContextImpl;
 
-static inline uint32_t X68SoundContextImpl_ToOfs(
+static inline DWORD X68SoundContextImpl_ToOfs(
 	const X68SoundContextImpl *contextImpl,
 	const volatile void *ptr
 ){
 	uintptr_t ofs = (uintptr_t)ptr - (uintptr_t)contextImpl->m_dmaBase;
+#if X68SOUND_ENABLE_PORTABLE_CODE
 	assert(ofs < 0x100000000LL);
-	return (ptr ? (uint32_t)ofs : 0);
+#endif
+	return (ptr ? (DWORD)ofs : 0);
 }
 
-static inline uint8_t *X68SoundContextImpl_ToPtr(
+static inline BYTE *X68SoundContextImpl_ToPtr(
 	const X68SoundContextImpl *contextImpl,
-	uint32_t ofs
+	DWORD ofs
 ){
-	return (ofs ? ((uint8_t *)(((uintptr_t)contextImpl->m_dmaBase) + (ofs))) : NULL);
+	return (ofs ? ((BYTE *)(((uintptr_t)contextImpl->m_dmaBase) + (ofs))) : NULL);
 }
 
+#if X68SOUND_ENABLE_PORTABLE_CODE
 static inline unsigned int irnd(X68SoundContextImpl *contextImpl){
 	contextImpl->m_RandSeed = contextImpl->m_RandSeed * 1566083941UL + 1;
 	return contextImpl->m_RandSeed;
 }
+#endif
 
-#define TO_OFS( ptr ) X68SoundContextImpl_ToOfs( m_contextImpl , ptr )
-#define TO_PTR( ofs ) X68SoundContextImpl_ToPtr( m_contextImpl , ofs )
+#define TO_OFS( ptr ) X68SoundContextImpl_ToOfs( pThis->m_contextImpl , ptr )
+#define TO_PTR( ofs ) X68SoundContextImpl_ToPtr( pThis->m_contextImpl , ofs )
 
-#define OpmFir					(m_contextImpl->m_OpmFir)
-#define DebugValue				(m_contextImpl->m_DebugValue)
-#define ErrorCode				(m_contextImpl->m_ErrorCode)
-#define Samprate				(m_contextImpl->m_Samprate)
-#define WaveOutSamp				(m_contextImpl->m_WaveOutSamp)
-#define OpmWait					(m_contextImpl->m_OpmWait)
-#define OpmRate					(m_contextImpl->m_OpmRate)
-#define STEPTBL					(m_contextImpl->m_STEPTBL)
-#define ALPHATBL				(m_contextImpl->m_ALPHATBL)
-#define SINTBL					(m_contextImpl->m_SINTBL)
-#define D1LTBL					(m_contextImpl->m_D1LTBL)
-#define DT1TBL					(m_contextImpl->m_DT1TBL)
-#define NOISEALPHATBL			(m_contextImpl->m_NOISEALPHATBL)
-#define MemRead					(m_contextImpl->m_MemRead)
-#define TotalVolume				(m_contextImpl->m_TotalVolume)
-#define Semapho					(m_contextImpl->m_Semapho)
-#define TimerSemapho			(m_contextImpl->m_TimerSemapho)
-#define OPMLPF_ROW				(m_contextImpl->m_OPMLPF_ROW)
-#define OPMLOWPASS				(m_contextImpl->m_OPMLOWPASS)
-#define Betw_Time				(m_contextImpl->m_Betw_Time)
-#define Late_Time				(m_contextImpl->m_Late_Time)
-#define Late_Samples			(m_contextImpl->m_Late_Samples)
-#define Blk_Samples				(m_contextImpl->m_Blk_Samples)
-#define Betw_Samples_Slower		(m_contextImpl->m_Betw_Samples_Slower)
-#define Betw_Samples_Faster		(m_contextImpl->m_Betw_Samples_Faster)
-#define Betw_Samples_VerySlower	(m_contextImpl->m_Betw_Samples_VerySlower)
-#define Slower_Limit			(m_contextImpl->m_Slower_Limit)
-#define Faster_Limit			(m_contextImpl->m_Faster_Limit)
-#define TimerResolution			(m_contextImpl->m_TimerResolution)
-#define nSamples				(m_contextImpl->m_nSamples)
-#define N_waveblk				(m_contextImpl->m_N_waveblk)
-#define waveblk					(m_contextImpl->m_waveblk)
-#define playingblk				(m_contextImpl->m_playingblk)
-#define playingblk_next			(m_contextImpl->m_playingblk_next)
-#define setPcmBufPtr			(m_contextImpl->m_setPcmBufPtr)
+#define OpmFir					(pThis->m_contextImpl->m_OpmFir)
+#define DebugValue				(pThis->m_contextImpl->m_DebugValue)
+#define ErrorCode				(pThis->m_contextImpl->m_ErrorCode)
+#define Samprate				(pThis->m_contextImpl->m_Samprate)
+#define WaveOutSamp				(pThis->m_contextImpl->m_WaveOutSamp)
+#define OpmWait					(pThis->m_contextImpl->m_OpmWait)
+#define OpmRate					(pThis->m_contextImpl->m_OpmRate)
+#define STEPTBL					(pThis->m_contextImpl->m_STEPTBL)
+#define ALPHATBL				(pThis->m_contextImpl->m_ALPHATBL)
+#define SINTBL					(pThis->m_contextImpl->m_SINTBL)
+#define D1LTBL					(pThis->m_contextImpl->m_D1LTBL)
+#define DT1TBL					(pThis->m_contextImpl->m_DT1TBL)
+#define NOISEALPHATBL			(pThis->m_contextImpl->m_NOISEALPHATBL)
+#define MemRead					(pThis->m_contextImpl->m_MemRead)
+#define TotalVolume				(pThis->m_contextImpl->m_TotalVolume)
+#define Semapho					(pThis->m_contextImpl->m_Semapho)
+#define TimerSemapho			(pThis->m_contextImpl->m_TimerSemapho)
+#define OPMLPF_ROW				(pThis->m_contextImpl->m_OPMLPF_ROW)
+#define OPMLOWPASS				(pThis->m_contextImpl->m_OPMLOWPASS)
+#define Betw_Time				(pThis->m_contextImpl->m_Betw_Time)
+#define Late_Time				(pThis->m_contextImpl->m_Late_Time)
+#define Late_Samples			(pThis->m_contextImpl->m_Late_Samples)
+#define Blk_Samples				(pThis->m_contextImpl->m_Blk_Samples)
+#define Betw_Samples_Slower		(pThis->m_contextImpl->m_Betw_Samples_Slower)
+#define Betw_Samples_Faster		(pThis->m_contextImpl->m_Betw_Samples_Faster)
+#define Betw_Samples_VerySlower	(pThis->m_contextImpl->m_Betw_Samples_VerySlower)
+#define Slower_Limit			(pThis->m_contextImpl->m_Slower_Limit)
+#define Faster_Limit			(pThis->m_contextImpl->m_Faster_Limit)
+#define TimerResolution			(pThis->m_contextImpl->m_TimerResolution)
+#define nSamples				(pThis->m_contextImpl->m_nSamples)
+#define N_waveblk				(pThis->m_contextImpl->m_N_waveblk)
+#define waveblk					(pThis->m_contextImpl->m_waveblk)
+#define playingblk				(pThis->m_contextImpl->m_playingblk)
+#define playingblk_next			(pThis->m_contextImpl->m_playingblk_next)
+#define setPcmBufPtr			(pThis->m_contextImpl->m_setPcmBufPtr)
 
 #endif //__X68SOUND_CONTEXT_INTERNAL_H__

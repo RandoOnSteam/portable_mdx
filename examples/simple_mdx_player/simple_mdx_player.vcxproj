@@ -39,16 +39,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\mdx_util.c" />
-    <ClCompile Include="..\..\src\mxdrv\mxdrv.cpp" />
-    <ClCompile Include="..\..\src\mxdrv\mxdrv_context.cpp" />
-    <ClCompile Include="..\..\src\mxdrv\sound_iocs.cpp" />
-    <ClCompile Include="..\..\src\x68sound\x68sound.cpp" />
-    <ClCompile Include="..\..\src\x68sound\x68sound_adpcm.cpp" />
-    <ClCompile Include="..\..\src\x68sound\x68sound_context.cpp" />
-    <ClCompile Include="..\..\src\x68sound\x68sound_lfo.cpp" />
-    <ClCompile Include="..\..\src\x68sound\x68sound_op.cpp" />
-    <ClCompile Include="..\..\src\x68sound\x68sound_opm.cpp" />
-    <ClCompile Include="..\..\src\x68sound\x68sound_pcm8.cpp" />
+    <ClCompile Include="..\..\src\mxdrv\mxdrv.c" />
+    <ClCompile Include="..\..\src\mxdrv\mxdrv_context.c" />
+    <ClCompile Include="..\..\src\mxdrv\sound_iocs.c" />
+    <ClCompile Include="..\..\src\x68sound\x68sound.c" />
+    <ClCompile Include="..\..\src\x68sound\x68sound_adpcm.c" />
+    <ClCompile Include="..\..\src\x68sound\x68sound_context.c" />
+    <ClCompile Include="..\..\src\x68sound\x68sound_lfo.c" />
+    <ClCompile Include="..\..\src\x68sound\x68sound_op.c" />
+    <ClCompile Include="..\..\src\x68sound\x68sound_opm.c" />
+    <ClCompile Include="..\..\src\x68sound\x68sound_pcm8.c" />
     <ClCompile Include="main.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

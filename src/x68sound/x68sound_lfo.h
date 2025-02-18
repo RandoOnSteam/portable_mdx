@@ -18,20 +18,13 @@
 //int		LFOSTEPTBL[256];
 //int		LFOSTEPTBL3[256];		// Wave form 3 用
 //short	PMSTBL[8]={ 0,1,2,4,8,16,64,128 };
-#if X68SOUND_ENABLE_PORTABLE_CODE
-const int	PMSMUL[8]={ 0,1,2,4,8,16,32,32 };
-const int	PMSSHL[8]={ 0,0,0,0,0, 0, 1, 2 };
-#else
-int	PMSMUL[8]={ 0,1,2,4,8,16,32,32 };
-int	PMSSHL[8]={ 0,0,0,0,0, 0, 1, 2 };
-#endif
 
 
-class Lfo {
+typedef struct LFO {
 #if X68SOUND_ENABLE_PORTABLE_CODE
-public:
+/*public:*/
 	struct tagX68SoundContextImpl *m_contextImpl;
-private:
+/*private:*/
 #endif
 	int Pmsmul[N_CH];	// 0, 1, 2, 4, 8, 16, 32, 32
 	int Pmsshl[N_CH];	// 0, 0, 0, 0, 0,  0,  1,  2
@@ -55,34 +48,36 @@ private:
 
 	char	PmTbl0[SIZELFOTBL], PmTbl2[SIZELFOTBL];
 	unsigned char	AmTbl0[SIZELFOTBL], AmTbl2[SIZELFOTBL];
+} LFO;
 
-	void CulcTblValue();
-	void	CulcPmValue(int ch);
-	void	CulcAmValue(int ch);
-	void CulcAllPmValue();
-	void CulcAllAmValue();
+/* private */
+void Lfo_CulcTblValue(LFO* pThis);
+void Lfo_CulcPmValue(LFO* pThis, int ch);
+void Lfo_CulcAmValue(LFO* pThis, int ch);
+void Lfo_CulcAllPmValue(LFO* pThis);
+void Lfo_CulcAllAmValue(LFO* pThis);
 
-public:
+/* public */
 #if X68SOUND_ENABLE_PORTABLE_CODE
-	Lfo(struct tagX68SoundContextImpl *contextImpl);
+	void Lfo_ConstructWithX68SoundContextImpl(LFO* pThis,
+		struct tagX68SoundContextImpl *contextImpl);
 #else
-	Lfo(void);
+	void Lfo_Construct(LFO* pThis);
 #endif
-	~Lfo() {};
+#define Lfo_Destruct(pThis)
 
-	void Init();
-	void InitSamprate();
+void Lfo_Init(LFO* pThis);
+void Lfo_InitSamprate(LFO* pThis);
 
-	void LfoReset();
-	void LfoStart();
-	void SetLFRQ(int n);
-	void SetPMDAMD(int n);
-	void	SetWaveForm(int n);
-	void	SetPMSAMS(int ch, int n);
+void Lfo_LfoReset(LFO* pThis);
+void Lfo_LfoStart(LFO* pThis);
+void Lfo_SetLFRQ(LFO* pThis, int n);
+void Lfo_SetPMDAMD(LFO* pThis, int n);
+void Lfo_SetWaveForm(LFO* pThis, int n);
+void Lfo_SetPMSAMS(LFO* pThis, int ch, int n);
 
-	void	Update();
-	int	GetPmValue(int ch);
-	int	GetAmValue(int ch);
-};
+void Lfo_Update(LFO* pThis);
+int	Lfo_GetPmValue(LFO* pThis, int ch);
+int	Lfo_GetAmValue(LFO* pThis, int ch);
 
 #endif //__X68SOUND_LFO_H__

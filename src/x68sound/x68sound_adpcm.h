@@ -3,13 +3,13 @@
 
 #include "x68sound_config.h"
 
-class Adpcm {
+typedef struct ADPCM {
 #if X68SOUND_ENABLE_PORTABLE_CODE
-public:
+/*public:*/
 	struct tagX68SoundContextImpl *m_contextImpl;
-private:
+/*private:*/
 #endif
-	int	Scale;		// 
+	int	Scale;		//
 	int Pcm;		// 16bit PCM Data
 	int InpPcm,InpPcm_prev,OutPcm;		// HPF用 16bit PCM Data
 	int OutInpPcm,OutInpPcm_prev;		// HPF用
@@ -18,9 +18,7 @@ private:
 	int	N1Data;	// ADPCM 1サンプルのデータの保存
 	int N1DataFlag;	// 0 or 1
 
-	void adpcm2pcm(unsigned char adpcm);
-
-public:
+/*public:*/
 #if X68SOUND_ENABLE_PORTABLE_CODE
 	void (*IntProc)(void *);	// 割り込みアドレス
 	void *IntArg;
@@ -35,7 +33,6 @@ public:
 //	int	DmaCsr;		// DMA CSR レジスタの内容
 //	int	DmaCcr;		// DMA CCR レジスタの内容
 //	int	DmaFlag;	// 0:DMA非動作  1:DMA動作中
-	int	DmaGetByte();
 	unsigned char	DmaLastValue;
 	volatile unsigned char	AdpcmReg;
 #if X68SOUND_ENABLE_PORTABLE_CODE
@@ -47,27 +44,28 @@ public:
 #else
 	volatile unsigned char	DmaReg[0x40];
 #endif
-int FinishCounter;
-	void DmaError(unsigned char errcode);
-	void DmaFinish();
-	int DmaContinueSetNextMtcMar();
-	int DmaArrayChainSetNextMtcMar();
-	int DmaLinkArrayChainSetNextMtcMar();
+	int FinishCounter;
+} ADPCM;
 
-#if X68SOUND_ENABLE_PORTABLE_CODE
-	Adpcm(struct tagX68SoundContextImpl *contextImpl);
-#else
-	Adpcm(void);
-#endif
-	~Adpcm() {};
-	void	Init();
-	void	InitSamprate();
-	void Reset();
-	int	GetPcm();
-	int	GetPcm62();
+int	Adpcm_DmaGetByte(ADPCM* pThis);
+void  Adpcm_adpcm2pcm(ADPCM* pThis, unsigned char adpcm);
 
-	void	SetAdpcmRate(int rate);
+void Adpcm_DmaError(ADPCM* pThis, unsigned char errcode);
+void Adpcm_DmaFinish(ADPCM* pThis);
+int Adpcm_DmaContinueSetNextMtcMar(ADPCM* pThis);
+int Adpcm_DmaArrayChainSetNextMtcMar(ADPCM* pThis);
+int Adpcm_DmaLinkArrayChainSetNextMtcMar(ADPCM* pThis);
 
-};
+void Adpcm_ConstructWithX68SoundContextImpl(ADPCM* pThis,
+	struct tagX68SoundContextImpl *contextImpl);
+void Adpcm_Construct(ADPCM* pThis);
+#define Adpcm_Destruct(pThis)
+void Adpcm_Init(ADPCM* pThis);
+void Adpcm_InitSamprate(ADPCM* pThis);
+void Adpcm_Reset(ADPCM* pThis);
+int	Adpcm_GetPcm(ADPCM* pThis);
+int	Adpcm_GetPcm62(ADPCM* pThis);
+
+void Adpcm_SetAdpcmRate(ADPCM* pThis, int rate);
 
 #endif //__X68SOUND_ADPCM_H__

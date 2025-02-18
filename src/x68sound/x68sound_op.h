@@ -15,33 +15,26 @@
 #define CULC_DELTA_T	(0x7FFFFFFF)
 #define	CULC_ALPHA		(0x7FFFFFFF)
 
-const int NEXTSTAT[RELEASE_MAX+1]={
-	DECAY, SUSTAIN, SUSTAIN_MAX, SUSTAIN_MAX, RELEASE_MAX, RELEASE_MAX,
-};
-const int MAXSTAT[RELEASE_MAX+1]={
-	ATACK, SUSTAIN_MAX, SUSTAIN_MAX, SUSTAIN_MAX, RELEASE_MAX, RELEASE_MAX,
-};
-
-class Op {
+typedef struct OP {
 #if X68SOUND_ENABLE_PORTABLE_CODE
-public:
+/*public:*/
 	struct tagX68SoundContextImpl *m_contextImpl;
-private:
+/*private:*/
 #endif
-public:
+/*public:*/
 	volatile int	inp;			// FM変調の入力
-private:
+/*private:*/
 	int LfoPitch;	// 前回のlfopitch値, CULC_DELTA_T値の時はDeltaTを再計算する。
 	int	T;		// 現在時間 (0 <= T < SIZESINTBL*PRECISION)
 	int DeltaT;	// Δt
 	int	Ame;		// 0(トレモロをかけない), -1(トレモロをかける)
 	int	LfoLevel;	// 前回のlfopitch&Ame値, CULC_ALPHA値の時はAlphaを再計算する。
 	int	Alpha;	// 最終的なエンベロープ出力値
-public:
+/*public:*/
 	volatile int	*out;			// オペレータの出力先
 	volatile int	*out2;			// オペレータの出力先(alg=5時のM1用)
 	volatile int	*out3;			// オペレータの出力先(alg=5時のM1用)
-private:
+/*private:*/
 	int	Pitch;	// 0<=pitch<10*12*64
 	int	Dt1Pitch;	// Step に対する補正量
 	int	Mul;	// 0.5*2 1*2 2*2 3*2 ... 15*2
@@ -66,8 +59,8 @@ private:
 	int	Xr_cmp;
 	int	Xr_add;
 	int Xr_limit;
-	
-	
+
+
 	int	Note;	// 音階 (0 <= Note < 10*12)
 	int	Kc;		// 音階 (1 <= Kc <= 128)
 	int	Kf;		// 微調整 (0 <= Kf < 64)
@@ -85,7 +78,10 @@ private:
 #else
 	struct {int and,cmp,add, limit;}
 #endif
-		StatTbl[RELEASE_MAX+1];	// 状態推移テーブル
+	StatTbl[RELEASE_MAX+1];	// 状態推移テーブル
+
+} OP;
+
 	//           ATACK     DECAY   SUSTAIN     SUSTAIN_MAX RELEASE     RELEASE_MAX
 	// and     :                               4097                    4097
 	// cmp     :                               2048                    2048
@@ -93,44 +89,39 @@ private:
 	// limit   : 0         D1l     63          63          63          63
 	// nextstat: DECAY     SUSTAIN SUSTAIN_MAX SUSTAIN_MAX RELEASE_MAX RELEASE_MAX
 
-	void	CulcArStep();
-	void	CulcD1rStep();
-	void	CulcD2rStep();
-	void	CulcRrStep();
-	void	CulcPitch();
-	void	CulcDt1Pitch();
-	void CulcNoiseCycle();
+	void Op_CulcArStep(OP* pThis);
+	void Op_CulcD1rStep(OP* pThis);
+	void Op_CulcD2rStep(OP* pThis);
+	void Op_CulcRrStep(OP* pThis);
+	void Op_CulcPitch(OP* pThis);
+	void Op_CulcDt1Pitch(OP* pThis);
+	void Op_CulcNoiseCycle(OP* pThis);
 
-public:
-#if X68SOUND_ENABLE_PORTABLE_CODE
-	Op(struct tagX68SoundContextImpl *contextImpl);
-#else
-	Op(void);
-#endif
-	~Op() {};
-	void Init();
-	void InitSamprate();
-	void SetFL(int n);
-	void SetKC(int n);
-	void SetKF(int n);
-	void SetDT1MUL(int n);
-	void SetTL(int n);
-	void SetKSAR(int n);
-	void SetAMED1R(int n);
-	void SetDT2D2R(int n);
-	void SetD1LRR(int n);
-	void KeyON();
-	void KeyOFF();
-	void Envelope(int env_counter);
-	void SetNFRQ(int nfrq);
+	void Op_ConstructWithX68SoundContextImpl(OP* pThis,
+		struct tagX68SoundContextImpl *contextImpl);
+	void Op_Construct(OP* pThis);
+	#define Op_Destruct(pThis)
+	void Op_Init(OP* pThis);
+	void Op_InitSamprate(OP* pThis);
+	void Op_SetFL(OP* pThis, int n);
+	void Op_SetKC(OP* pThis, int n);
+	void Op_SetKF(OP* pThis, int n);
+	void Op_SetDT1MUL(OP* pThis, int n);
+	void Op_SetTL(OP* pThis, int n);
+	void Op_SetKSAR(OP* pThis, int n);
+	void Op_SetAMED1R(OP* pThis, int n);
+	void Op_SetDT2D2R(OP* pThis, int n);
+	void Op_SetD1LRR(OP* pThis, int n);
+	void Op_KeyON(OP* pThis);
+	void Op_KeyOFF(OP* pThis);
+	void Op_Envelope(OP* pThis, int env_counter);
+	void Op_SetNFRQ(OP* pThis, int nfrq);
 
-	void Output0(int lfopitch, int lfolevel);		// オペレータ0用
-	void Output(int lfopitch, int lfolevel);		// 一般オペレータ用
-	void Output32(int lfopitch, int lfolevel);		// スロット32用
-	void Output0_22(int lfopitch, int lfolevel);		// オペレータ0用
-	void Output_22(int lfopitch, int lfolevel);		// 一般オペレータ用
-	void Output32_22(int lfopitch, int lfolevel);		// スロット32用
-};
-
+	void Op_Output0(OP* pThis, int lfopitch, int lfolevel);		// オペレータ0用
+	void Op_Output(OP* pThis, int lfopitch, int lfolevel);		// 一般オペレータ用
+	void Op_Output32(OP* pThis, int lfopitch, int lfolevel);		// スロット32用
+	void Op_Output0_22(OP* pThis, int lfopitch, int lfolevel);		// オペレータ0用
+	void Op_Output_22(OP* pThis, int lfopitch, int lfolevel);		// 一般オペレータ用
+	void Op_Output32_22(OP* pThis, int lfopitch, int lfolevel);		// スロット32用
 
 #endif //__X68SOUND_OP_H__

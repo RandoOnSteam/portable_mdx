@@ -3,10 +3,9 @@
 #ifndef __MXDRV_CONTEXT_H__
 #define __MXDRV_CONTEXT_H__
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <assert.h>
+
+#include "stdboolwrapper.h"
+#include "stdintwrapper.h"
 
 #ifdef __cplusplus
 extern "C" {

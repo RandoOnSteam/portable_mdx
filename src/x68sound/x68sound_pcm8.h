@@ -3,13 +3,13 @@
 
 #include "x68sound_config.h"
 
-class Pcm8 {
+typedef struct PCM8 {
 #if X68SOUND_ENABLE_PORTABLE_CODE
-public:
+/*public:*/
 	struct tagX68SoundContextImpl *m_contextImpl;
-private:
+/*private:*/
 #endif
-	int	Scale;		// 
+	int	Scale;		//
 	int Pcm;		// 16bit PCM Data
 	int Pcm16Prev;	// 16bit,8bitPCMの1つ前のデータ
 	int InpPcm,InpPcm_prev,OutPcm;		// HPF用 16bit PCM Data
@@ -23,11 +23,7 @@ private:
 	volatile int	Volume;	// x/16
 	volatile int	PcmKind;	// 0～4:ADPCM  5:16bitPCM  6:8bitPCM  7:謎
 
-	void adpcm2pcm(unsigned char adpcm);
-	void pcm16_2pcm(int pcm16);
-
-public:
-	int	DmaGetByte();
+/*public:*/
 	unsigned char	DmaLastValue;
 	unsigned char	AdpcmReg;
 
@@ -36,32 +32,32 @@ public:
 	volatile unsigned char *DmaBar;
 	volatile unsigned int DmaBtc;
 	volatile int	DmaOcr;				// 0:チェイン動作なし 0x08:アレイチェイン 0x0C:リンクアレイチェイン
+} PCM8;
 
 
-	int DmaArrayChainSetNextMtcMar();
-	int DmaLinkArrayChainSetNextMtcMar();
+	void Pcm8_adpcm2pcm(PCM8* pThis, unsigned char adpcm);
+	void Pcm8_pcm16_2pcm(PCM8* pThis, int pcm16);
+
+	int	Pcm8_DmaGetByte(PCM8* pThis);
+	int Pcm8_DmaArrayChainSetNextMtcMar(PCM8* pThis);
+	int Pcm8_DmaLinkArrayChainSetNextMtcMar(PCM8* pThis);
 
 #if X68SOUND_ENABLE_PORTABLE_CODE
-	Pcm8(struct tagX68SoundContextImpl *contextImpl);
-#else
-	Pcm8(void);
+	void Pcm8_ConstructWithX68SoundContextImpl(PCM8* pThis,
+		struct tagX68SoundContextImpl *contextImpl);
 #endif
-	~Pcm8() {};
-	void	Init();
-	void	InitSamprate();
-	void	Reset();
-	int		GetPcm();
-	int		GetPcm62();
+	void Pcm8_Construct(PCM8* pThis);
+#define Pcm8_Destruct(pThis)
+	void	Pcm8_Init(PCM8* pThis);
+	void	Pcm8_InitSamprate(PCM8* pThis);
+	void	Pcm8_Reset(PCM8* pThis);
+	int		Pcm8_GetPcm(PCM8* pThis);
+	int		Pcm8_GetPcm62(PCM8* pThis);
 
-	int		Out(void *adrs, int mode, int len);
-	int		Aot(void *tbl, int mode, int cnt);
-	int		Lot(void *tbl, int mode);
-	int		SetMode(int mode);
-	int		GetRest();
-	int		GetMode();
-
-
-};
-
-
+	int		Pcm8_Out(PCM8* pThis, void *adrs, int mode, int len);
+	int		Pcm8_Aot(PCM8* pThis, void *tbl, int mode, int cnt);
+	int		Pcm8_Lot(PCM8* pThis, void *tbl, int mode);
+	int		Pcm8_SetMode(PCM8* pThis, int mode);
+	int		Pcm8_GetRest(PCM8* pThis);
+	int		Pcm8_GetMode(PCM8* pThis);
 #endif //__X68SOUND_PCM8_H__

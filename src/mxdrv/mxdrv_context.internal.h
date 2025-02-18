@@ -4,12 +4,12 @@
 #ifndef __MXDRV_CONTEXT_INTERNAL_H__
 #define __MXDRV_CONTEXT_INTERNAL_H__
 
-#include <mutex>
 #include <mxdrv.h>
 #include <mxdrv_context.h>
 #include <x68sound_context.h>
 #include "mxdrv_config.h"
 #include "mxdrv_depend.h"
+#include "mutexwrapper.h"
 
 typedef struct tagMxdrvContextImpl {
 	ULONG m_D0;
@@ -81,7 +81,7 @@ typedef struct tagMxdrvContextImpl {
 	bool m_logicalSumOfKeyOnFlagsForPcm[8];
 
 	/* 再入防止用 */
-	std::mutex m_mtx;	/* 配置 new delete が必要 */
+	MUTEXWRAPPER m_mtx;	/* 配置 new delete が必要 */
 
 	/*
 		メモリプール領域は、MxdrvContextImpl 構造体から相対アドレス 32bit の

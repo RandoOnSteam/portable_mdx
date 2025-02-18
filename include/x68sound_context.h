@@ -3,7 +3,7 @@
 #ifndef __X68SOUND_CONTEXT_H__
 #define __X68SOUND_CONTEXT_H__
 
-#include <stdbool.h>
+#include "stdboolwrapper.h"
 
 #ifdef __cplusplus
 extern "C" {

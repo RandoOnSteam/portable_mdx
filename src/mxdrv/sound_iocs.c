@@ -36,6 +36,9 @@
 	#define X68Sound_y(context,no,data)				(X68Sound_OpmReg(context,no),X68Sound_OpmPoke(context,data))
 #endif
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 #if !MXDRV_ENABLE_PORTABLE_CODE
 // 16bit値のバイトの並びを逆にして返す
@@ -546,5 +549,8 @@ void sound_iocs_init(MxdrvContext *context) {
 void sound_iocs_init() {
 	X68Sound_DmaInt(DmaIntProc);
 	X68Sound_DmaErrInt(DmaErrIntProc);
+}
+#endif
+#if defined(__cplusplus)
 }
 #endif

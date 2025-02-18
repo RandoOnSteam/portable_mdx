@@ -4,9 +4,10 @@
 #ifndef __MXDRV_H__
 #define __MXDRV_H__
 
-#include <stdint.h>
-#include <stdbool.h>
+
 #include "mxdrv_context.h"
+#include "stdboolwrapper.h"
+#include "stdintwrapper.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -275,7 +276,7 @@ int MXDRV_GetPCM8Enable(
 	reg.d1 = 0x00;						\
 	MXDRV( context, &reg );				\
 }										\
-										
+
 
 #define MXDRV_Call_2( context, a, b )	\
 {										\
@@ -285,7 +286,7 @@ int MXDRV_GetPCM8Enable(
 	reg.d1 = (b);						\
 	MXDRV( context, &reg );				\
 }										\
-										
+
 
 #define MXDRV_Replay(context) MXDRV_Call(context, 0x0f )
 #define MXDRV_Stop(context) MXDRV_Call(context, 0x05 )

@@ -1,4 +1,4 @@
-﻿// X68k MXDRV music driver version 2.06+17 Rel.X5-S 
+﻿// X68k MXDRV music driver version 2.06+17 Rel.X5-S
 // (c)1988-92 milk.,K.MAEKAWA, Missy.M, Yatsube
 //
 // Converted for Win32 [MXDRVg] V1.50a
@@ -18,7 +18,7 @@
 // ;  Bss  size    0006a2 byte(s)
 // ;  438 Labels
 // ;  Code Generate date Wed May 06 12:59:13 1998
-// ;  Command Line D:\FTOOL\dis.x -C2 --overwrite -7 -m 68040 -M -s8192 -e -g mxdrv17.x mxdrv17.dis 
+// ;  Command Line D:\FTOOL\dis.x -C2 --overwrite -7 -m 68040 -M -s8192 -e -g mxdrv17.x mxdrv17.dis
 // ;          DIS version 2.75
 // ;=============================================
 
@@ -31,7 +31,6 @@
 //         .text
 
 #include "mxdrv_config.h"
-
 #if MXDRV_ENABLE_PORTABLE_CODE
 	#include <string.h>		/* for memset */
 	#include <mxdrv.h>
@@ -57,6 +56,10 @@
 	#include <float.h>
 
 	#include <mmsystem.h>
+#endif
+
+#if defined(__cplusplus)
+extern "C" {
 #endif
 
 #if MXDRV_ENABLE_PORTABLE_CODE
@@ -262,6 +265,7 @@ static void ADPCMMOD_END( MxdrvContext *context );
 static void MX_ABORT( MxdrvContext *context );
 
 static void OPMINTFUNC(void *);
+static void OPMINTFUNCNOLOCK(void *);
 
 static void L_PAUSE_( MxdrvContext *context );
 #else
@@ -389,9 +393,8 @@ static void ADPCMMOD_END( void );
 
 static void MX_ABORT( void );
 
-static void CALLBACK OPMINTFUNC(
-	void
-);
+static void CALLBACK OPMINTFUNC( void );
+static void CALLBACK OPMINTFUNCNOLOCK( void );
 
 static void L_PAUSE_(
 	void
@@ -505,29 +508,29 @@ void MXDRV_End(
 	}
 	if ( G.L001bac) {
 		MxdrvContextImpl_ReleaseMemory(context->m_impl, G.L001ba8);
-		G.L001bac = (uint32_t)NULL;
+		G.L001bac = (uint32_t)(size_t)NULL;
 	}
 	if ( G.L001e38) {
 		MxdrvContextImpl_ReleaseMemory(context->m_impl, G.L002224);
-		G.L001e38 = (uint32_t)NULL;
+		G.L001e38 = (uint32_t)(size_t)NULL;
 	}
 	if ( G.L001e34) {
 		MxdrvContextImpl_ReleaseMemory(context->m_impl, G.L002220);
-		G.L001e34 = (uint32_t)NULL;
+		G.L001e34 = (uint32_t)(size_t)NULL;
 	}
 	assert(MxdrvContextImpl_GetReservedMemoryPoolSize(context->m_impl) == 0);
 #else
 	if ( G.L001e34 ) {
 		free( (void*)G.L001e34 );
-		G.L001e34 = (uint32_t)NULL;
+		G.L001e34 = (uint32_t)(size_t)NULL;
 	}
 	if ( G.L001e38 ) {
 		free( (void*)G.L001e38 );
-		G.L001e38 = (uint32_t)NULL;
+		G.L001e38 = (uint32_t)(size_t)NULL;
 	}
 	if ( G.L001bac ) {
 		free( (void*)G.L001bac );
-		G.L001bac = (uint32_t)NULL;
+		G.L001bac = (uint32_t)(size_t)NULL;
 	}
 #endif
 
@@ -684,7 +687,8 @@ int MXDRV_SetData2(
 	memcpy(pdxOnMemoryPool, pdx, pdxsize);
 #endif
 #if MXDRV_ENABLE_PORTABLE_CODE
-	X68REG reg = {0};
+	X68REG reg;
+	memset(&reg, 0, sizeof(reg));
 #else
 	X68REG reg;
 #endif
@@ -848,7 +852,8 @@ uint32_t MXDRV_MeasurePlayTime2(
 	int fadeout
 ) {
 #if MXDRV_ENABLE_PORTABLE_CODE
-	X68REG reg = {0};
+	X68REG reg;
+	memset(&reg, 0, sizeof(reg));
 	void (*opmintback)( MxdrvContext *context );
 #else
 	X68REG reg;
@@ -898,6 +903,10 @@ uint32_t MXDRV_MeasurePlayTime2(
 #endif
 
 	uint32_t ret = (DWORD)(G.PLAYTIME*(LONGLONG)1024/4000+(1-DBL_EPSILON))+2000;
+	/*uint32_t ret = (DWORD)(
+		WSInt64MultiplyNativeResult(G.PLAYTIME,
+		(uint32_t)WSInt64DivideNativeResult(1024,4000))+(1-DBL_EPSILON)
+		)+2000;*/
 	G.PLAYTIME = 0;
 	return ret;
 }
@@ -951,7 +960,7 @@ void MXDRV_PlayAt(
 
 ) {
 #if MXDRV_ENABLE_PORTABLE_CODE
-	X68REG reg = {0};
+	X68REG reg;
 	void (*opmintback)(MxdrvContext *context);
 #else
 	X68REG reg;
@@ -959,17 +968,26 @@ void MXDRV_PlayAt(
 #endif
 	UWORD chmaskback;
 	int opmwaitback;
+	int volume;
+
+	playat = (DWORD)(playat*(LONGLONG)4000/1024);
 
 #if MXDRV_ENABLE_PORTABLE_CODE
-	X68Sound_OpmInt( &context->m_impl->m_x68SoundContext, NULL, NULL );
-#else
-	X68Sound_OpmInt( NULL );
+	memset(&reg, 0, sizeof(reg));
 #endif
 
+	if(playat < G.PLAYTIME)
+	{
+	#if MXDRV_ENABLE_PORTABLE_CODE
+		X68Sound_OpmInt( &context->m_impl->m_x68SoundContext, NULL, NULL );
+	#else
+		X68Sound_OpmInt( NULL );
+	#endif
+	}
 	TerminatePlay = FALSE;
 	LoopCount = 0;
-	LoopLimit = loop;
 	FadeoutStart = FALSE;
+	LoopLimit = loop;
 	ReqFadeout = fadeout;
 
 #if MXDRV_ENABLE_PORTABLE_CODE
@@ -977,8 +995,6 @@ void MXDRV_PlayAt(
 #else
 	L_PLAY();
 #endif
-
-	playat = (DWORD)(playat*(LONGLONG)4000/1024);
 
 	opmintback = MXCALLBACK_OPMINT;
 	MXCALLBACK_OPMINT = MXDRV_MeasurePlayTime_OPMINT;
@@ -995,30 +1011,47 @@ void MXDRV_PlayAt(
 #if MXDRV_ENABLE_PORTABLE_CODE
 	opmwaitback = X68Sound_OpmWait(&context->m_impl->m_x68SoundContext, -1);
 	X68Sound_OpmWait(&context->m_impl->m_x68SoundContext, 1);
+	volume = X68Sound_GetTotalVolume( &context->m_impl->m_x68SoundContext);
+	X68Sound_TotalVolume(&context->m_impl->m_x68SoundContext, 0);
 #else
 	opmwaitback = X68Sound_OpmWait(-1);
 	X68Sound_OpmWait(1);
+	volume = X68Sound_GetTotalVolume();
+	X68Sound_TotalVolume(0);
+#endif
+
+#if MXDRV_ENABLE_PORTABLE_CODE
+	MxdrvContext_EnterCriticalSection( context );
+#else
+	EnterCriticalSection( &CS_OPMINT );
 #endif
 	while ( G.PLAYTIME < playat ) {
 		if ( TerminatePlay ) break;
 #if MXDRV_ENABLE_PORTABLE_CODE
-		OPMINTFUNC( context );
+		OPMINTFUNCNOLOCK( context );
 #else
-		OPMINTFUNC();
+		OPMINTFUNCNOLOCK();
 #endif
 	}
 #if MXDRV_ENABLE_PORTABLE_CODE
+	MxdrvContext_LeaveCriticalSection( context );
+#else
+	LeaveCriticalSection( &CS_OPMINT );
+#endif
+#if MXDRV_ENABLE_PORTABLE_CODE
 	X68Sound_OpmWait( &context->m_impl->m_x68SoundContext, opmwaitback );
 #else
-	X68Sound_OpmWait(opmwaitback);
+	X68Sound_OpmWait( opmwaitback );
 #endif
 
 	G.L001e1c = chmaskback;
 	MXCALLBACK_OPMINT = opmintback;
 #if MXDRV_ENABLE_PORTABLE_CODE
 	X68Sound_OpmInt( &context->m_impl->m_x68SoundContext, &OPMINTFUNC, (void *)context );
+	X68Sound_TotalVolume( &context->m_impl->m_x68SoundContext, volume );
 #else
 	X68Sound_OpmInt( &OPMINTFUNC );
+	X68Sound_TotalVolume( volume );
 #endif
 }
 
@@ -1043,7 +1076,7 @@ int MXDRV_GetTerminated(
 	void
 #endif
 ) {
-	
+
 	if ( G.PLAYTIME >= G.MEASURETIMELIMIT ) {
 		return (1);
 	}
@@ -1145,8 +1178,9 @@ static void ADPCMOUT(
 		ZEL2_.MDX にて、A1 が不正なポインタの状態でここが実行される。
 		対症療法で回避。
 	*/
-	if (&context->m_impl->m_memoryPool[0] <= addr
-	&&	addr < &context->m_impl->m_memoryPool[context->m_impl->m_memoryPoolSizeInBytes]) {
+	if (&context->m_impl->m_memoryPool[0] <= (uint8_t*)addr
+			&&	(uint8_t*)addr < &context->m_impl->m_memoryPool[
+						context->m_impl->m_memoryPoolSizeInBytes]) {
 		_iocs_adpcmout( context, TO_PTR(A1), D1, D2 );
 	} else {
 //		printf("invalid A1 %08X\n", A1);
@@ -1188,6 +1222,32 @@ static void ADPCMMOD_END(
 /***************************************************************/
 
 #if MXDRV_ENABLE_PORTABLE_CODE
+static void OPMINTFUNCNOLOCK(
+	void	*arg
+#else
+static void CALLBACK OPMINTFUNCNOLOCK(
+	void
+#endif
+) {
+#if MXDRV_ENABLE_PORTABLE_CODE
+	MxdrvContext *context = (MxdrvContext *)arg;
+#endif
+#if MXDRV_ENABLE_PORTABLE_CODE
+	OPMINT_FUNC( context );
+#else
+	OPMINT_FUNC();
+#endif
+	if ( !G.STOPMUSICTIMER ) {
+		G.PLAYTIME += 256-G.MUSICTIMER; // OPMBUF[0x12];
+	}
+#if MXDRV_ENABLE_PORTABLE_CODE
+	if ( MXCALLBACK_OPMINT ) MXCALLBACK_OPMINT( context );
+#else
+	if ( MXCALLBACK_OPMINT ) MXCALLBACK_OPMINT();
+#endif
+}
+
+#if MXDRV_ENABLE_PORTABLE_CODE
 static void OPMINTFUNC(
 	void	*arg
 #else
@@ -1205,17 +1265,9 @@ static void CALLBACK OPMINTFUNC(
 	EnterCriticalSection( &CS_OPMINT );
 #endif
 #if MXDRV_ENABLE_PORTABLE_CODE
-	OPMINT_FUNC( context );
+	OPMINTFUNCNOLOCK(arg);
 #else
-	OPMINT_FUNC();
-#endif
-	if ( !G.STOPMUSICTIMER ) {
-		G.PLAYTIME += 256-G.MUSICTIMER; // OPMBUF[0x12];
-	}
-#if MXDRV_ENABLE_PORTABLE_CODE
-	if ( MXCALLBACK_OPMINT ) MXCALLBACK_OPMINT( context );
-#else
-	if ( MXCALLBACK_OPMINT ) MXCALLBACK_OPMINT();
+	OPMINTFUNCNOLOCK();
 #endif
 #if MXDRV_ENABLE_PORTABLE_CODE
 	MxdrvContext_LeaveCriticalSection( context );
@@ -10385,5 +10437,9 @@ L001190:;
 		.dc.w   $1234
 
 		.end    L0017ea
+#endif
+
+#if defined(__cplusplus)
+}
 #endif
 

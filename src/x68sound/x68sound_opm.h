@@ -2,16 +2,16 @@
 #define __X68SOUND_OPM_H__
 
 #include "x68sound_config.h"
-#include <mutex>
 
 #if X68SOUND_ENABLE_PORTABLE_CODE
 	#include "x68sound_global.h"
-	#include "x68sound_op.h"
-	#include "x68sound_lfo.h"
-	#include "x68sound_adpcm.h"
-	#include "x68sound_pcm8.h"
 #endif
+#include "x68sound_op.h"
+#include "x68sound_lfo.h"
+#include "x68sound_adpcm.h"
+#include "x68sound_pcm8.h"
 
+#include "mutexwrapper.h"
 
 #define	CMNDBUFSIZE	65535
 #define	FlagBufSize	7
@@ -21,11 +21,11 @@
 #define	PCMBUFSIZE	65536
 //#define	DELAY	(1000/5)
 
-class Opm {
+typedef struct OPM {
 #if X68SOUND_ENABLE_PORTABLE_CODE
-public:
+/*public:*/
 	struct tagX68SoundContextImpl *m_contextImpl;
-private:
+/*private:*/
 #endif
 #if X68SOUND_ENABLE_PORTABLE_CODE
 	const char *Author;
@@ -33,7 +33,7 @@ private:
 	char *Author;
 #endif
 
-	Op	op[8][4];	// オペレータ0～31
+	OP	op[8][4];	// オペレータ0～31
 	int	EnvCounter1;	// エンベロープ用カウンタ1 (0,1,2,3,4,5,6,...)
 	int	EnvCounter2;	// エンベロープ用カウンタ2 (3,2,1,3,2,1,3,2,...)
 //	int	con[N_CH];	// アルゴリズム 0～7
@@ -43,7 +43,7 @@ private:
 //	int	pmd;
 //	int	amd;
 //	int	pmspmd[N_CH];	// pms[]*pmd
-	Lfo	lfo;
+	LFO	lfo;
 	int	SLOTTBL[8*4];
 
 	unsigned char	CmndBuf[CMNDBUFSIZE+1][2];
@@ -57,13 +57,13 @@ private:
 	int RateForPcmset22;
 	int Rate2ForPcmset22;
 #endif
-	
+
 	//	short	PcmBuf[PCMBUFSIZE][2];
 	short	(*PcmBuf)[2];
-public:
+/*public:*/
 	unsigned int PcmBufSize;
 	volatile unsigned int PcmBufPtr;
-private:
+/*private:*/
 #if !X68SOUND_ENABLE_PORTABLE_CODE
 	unsigned int	TimerID;
 #endif
@@ -71,11 +71,11 @@ private:
 //	int	LfoOverTime;	// LFO tのオーバーフロー値
 //	int	LfoTime;	// LFO専用 t
 //	int LfoRndTime;	// LFOランダム波専用t
-//	int 
+//	int
 //	int	Lfrq;		// LFO周波数設定値 LFRQ
 //	int	LfoWaveForm;	// LFO wave form
 //	inline void	CulcLfoStep();
-	void SetConnection(int ch, int alg);
+
 	volatile int	OpOut[8];
 	int	OpOutDummy;
 
@@ -115,10 +115,10 @@ private:
 		OutOutAdpcm[2],OutOutAdpcm_prev[2],OutOutAdpcm_prev2[2];	// 高音フィルター２用バッファ
 	int OutInpOutAdpcm[2],OutInpOutAdpcm_prev[2],OutInpOutAdpcm_prev2[2],
 		OutOutInpAdpcm[2],OutOutInpAdpcm_prev[2];			// 高音フィルター３用バッファ
-	
+
 	volatile unsigned char	PpiReg;
 	unsigned char	AdpcmBaseClock;	// ADPCMクロック切り替え(0:8MHz 1:4Mhz)
-	void SetAdpcmRate();
+
 
 	unsigned char	OpmRegNo;		// 現在指定されているOPMレジスタ番号
 	unsigned char	OpmRegNo_backup;		// バックアップ用OPMレジスタ番号
@@ -142,98 +142,99 @@ private:
 	int Dousa_mode;		// 0:非動作 1:X68Sound_Start中  2:X68Sound_PcmStart中
 
 	/* CmndBufアクセスロック用 */
-	std::mutex m_mtxCmnd;
+	MUTEXWRAPPER m_mtxCmnd;
 
 //public:
-	Adpcm	adpcm;
+	ADPCM	adpcm;
 //private:
-	Pcm8	pcm8[PCM8_NCH];
+	PCM8	pcm8[PCM8_NCH];
 
 //	int	TotalVolume;	// 音量 x/256
+/*public:*/
+} OPM;
 
+	void Opm_SetAdpcmRate(OPM* pThis);
+	void Opm_SetConnection(OPM* pThis, int ch, int alg);
 
-public:
 #if X68SOUND_ENABLE_PORTABLE_CODE
-	Opm(struct tagX68SoundContextImpl *contextImpl);
-#else
-	Opm(void);
+	void Opm_ConstructWithX68SoundContextImpl(OPM* pThis,
+		struct tagX68SoundContextImpl *contextImpl);
 #endif
-	~Opm();
-	void pcmset62(int ndata);
-	void pcmset22(int ndata);
+	void Opm_Construct(OPM* pThis);
+    void Opm_Destruct(OPM* pThis);
+	void Opm_pcmset62(OPM* pThis, int ndata);
+	void Opm_pcmset22(OPM* pThis, int ndata);
 
-	int GetPcm(void *buf, int ndata);
+	int Opm_GetPcm(OPM* pThis, void *buf, int ndata);
 
-	void timer();
-	void betwint();
+	void Opm_timer(OPM* pThis);
+	void Opm_betwint(OPM* pThis);
 
-	void MakeTable();
-	int Start(int samprate, int opmflag, int adpcmflag,
+	void Opm_MakeTable(OPM* pThis);
+	int Opm_Start(OPM* pThis, int samprate, int opmflag, int adpcmflag,
 				int betw, int pcmbuf, int late, double rev);
-	int StartPcm(int samprate, int opmflag, int adpcmflag, int pcmbuf);
-	int SetSamprate(int samprate);
-	int SetOpmClock(int clock);
-	int WaveAndTimerStart();
-	int SetOpmWait(int wait);
-	void CulcCmndRate();
-	void Reset();
-	void ResetSamprate();
-	void Free();
+	int Opm_StartPcm(OPM* pThis,
+		int samprate, int opmflag, int adpcmflag, int pcmbuf);
+	int Opm_SetSamprate(OPM* pThis, int samprate);
+	int Opm_SetOpmClock(OPM* pThis, int clock);
+	int Opm_WaveAndTimerStart(OPM* pThis);
+	int Opm_SetOpmWait(OPM* pThis, int wait);
+	void Opm_CulcCmndRate(OPM* pThis);
+	void Opm_Reset(OPM* pThis);
+	void Opm_ResetSamprate(OPM* pThis);
+	void Opm_Free(OPM* pThis);
 #if X68SOUND_ENABLE_PORTABLE_CODE
-	void BetwInt(void (*proc)(void *), void *arg);
+	void Opm_BetwInt(OPM* pThis, void (*proc)(void *), void *arg);
 #else
-	void BetwInt(void (CALLBACK *proc)());
+	void Opm_BetwInt(OPM* pThis, void (CALLBACK *proc)());
 #endif
 
-	unsigned char OpmPeek();
-	void OpmReg(unsigned char no);
-	void OpmPoke(unsigned char data);
-	void ExecuteCmnd();
+	unsigned char Opm_OpmPeek(OPM* pThis);
+	void Opm_OpmReg(OPM* pThis, unsigned char no);
+	void Opm_OpmPoke(OPM* pThis, unsigned char data);
+	void Opm_ExecuteCmnd(OPM* pThis);
 #if X68SOUND_ENABLE_PORTABLE_CODE
-	void OpmInt(void (*proc)(void *), void *arg);
+	void Opm_OpmInt(OPM* pThis, void (*proc)(void *), void *arg);
 #else
-	void OpmInt(void (CALLBACK *proc)());
+	void Opm_OpmInt(OPM* pThis, void (CALLBACK *proc)());
 #endif
 
-	unsigned char AdpcmPeek();
-	void AdpcmPoke(unsigned char data);
-	unsigned char PpiPeek();
-	void PpiPoke(unsigned char data);
-	void PpiCtrl(unsigned char data);
+	unsigned char Opm_AdpcmPeek(OPM* pThis);
+	void Opm_AdpcmPoke(OPM* pThis, unsigned char data);
+	unsigned char Opm_PpiPeek(OPM* pThis);
+	void Opm_PpiPoke(OPM* pThis, unsigned char data);
+	void Opm_PpiCtrl(OPM* pThis, unsigned char data);
 
-	unsigned char DmaPeek(unsigned char adrs);
-	void DmaPoke(unsigned char adrs, unsigned char data);
+	unsigned char Opm_DmaPeek(OPM* pThis, unsigned char adrs);
+	void Opm_DmaPoke(OPM* pThis, unsigned char adrs, unsigned char data);
 #if X68SOUND_ENABLE_PORTABLE_CODE
-	void DmaInt(void (*proc)(void *), void *arg);
-	void DmaErrInt(void (*proc)(void *), void *arg);
-	void MemReadFunc(int (*func)(unsigned char *));
+	void Opm_DmaInt(OPM* pThis, void (*proc)(void *), void *arg);
+	void Opm_DmaErrInt(OPM* pThis, void (*proc)(void *), void *arg);
+	void Opm_MemReadFunc(OPM* pThis, int (*func)(unsigned char *));
 #else
-	void DmaInt(void (CALLBACK *proc)());
-	void DmaErrInt(void (CALLBACK *proc)());
-	void MemReadFunc(int (CALLBACK *func)(unsigned char *));
+	void Opm_DmaInt(OPM* pThis, void (CALLBACK *proc)());
+	void Opm_DmaErrInt(OPM* pThis, void (CALLBACK *proc)());
+	void Opm_MemReadFunc(OPM* pThis, int (CALLBACK *func)(unsigned char *));
 #endif
 
 #if X68SOUND_ENABLE_PORTABLE_CODE
-	void SetWaveFunc(int (*func)(void *), void *arg);
+	void Opm_SetWaveFunc(OPM* pThis, int (*func)(void *), void *arg);
 #else
-	void SetWaveFunc(int (CALLBACK *func)());
+	void Opm_SetWaveFunc(OPM* pThis, int (CALLBACK *func)());
 #endif
 
-	int Pcm8_Out(int ch, void *adrs, int mode, int len);
-	int Pcm8_Aot(int ch, void *tbl, int mode, int cnt);
-	int Pcm8_Lot(int ch, void *tbl, int mode);
-	int Pcm8_SetMode(int ch, int mode);
-	int Pcm8_GetRest(int ch);
-	int Pcm8_GetMode(int ch);
-	int Pcm8_Abort();
+	int Opm_Pcm8_Out(OPM* pThis, int ch, void *adrs, int mode, int len);
+	int Opm_Pcm8_Aot(OPM* pThis, int ch, void *tbl, int mode, int cnt);
+	int Opm_Pcm8_Lot(OPM* pThis, int ch, void *tbl, int mode);
+	int Opm_Pcm8_SetMode(OPM* pThis, int ch, int mode);
+	int Opm_Pcm8_GetRest(OPM* pThis, int ch);
+	int Opm_Pcm8_GetMode(OPM* pThis, int ch);
+	int Opm_Pcm8_Abort(OPM* pThis);
 
-	int SetTotalVolume(int v);
-	int GetTotalVolume(void);
+	int Opm_SetTotalVolume(OPM* pThis, int v);
+	int Opm_GetTotalVolume(OPM* pThis);
 
-	void PushRegs();
-	void PopRegs();
-
-};
-
+	void Opm_PushRegs(OPM* pThis);
+	void Opm_PopRegs(OPM* pThis);
 
 #endif //__X68SOUND_OPM_H__

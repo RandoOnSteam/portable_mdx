@@ -7,18 +7,18 @@
 #include "mxdrv_config.h"
 
 #if MXDRV_ENABLE_PORTABLE_CODE
+	#include "stdintwrapper.h"
 	#ifdef _WIN32
 		#include <windows.h>
-		#include <stdint.h>
 	#else
 		#include <stdlib.h>
 		#define BOOL bool
-		#include <stdint.h>
 		typedef uint32_t UINT;
 		typedef uint8_t BYTE;
 		typedef uint32_t DWORD;
 		typedef int64_t LONGLONG;
 	#endif
+	#include <assert.h>
 #endif
 
 #ifdef _WIN32
